@@ -1,0 +1,324 @@
+{
+  "project": {
+    "name": "Mapeamento Completo da Documentação Anthropic",
+    "version": "1.0",
+    "created_date": "2025-11-06",
+    "last_updated": "2025-11-06",
+    "status": "complete",
+    "description": "Mapeamento abrangente e organizado de toda a documentação oficial da Anthropic, incluindo docs do Claude, Claude Code, Engineering Blog, recursos de aprendizado e notícias."
+  },
+  "statistics": {
+    "total_urls_mapped": 150,
+    "total_files_created": 10,
+    "categories": 6,
+    "languages": ["pt", "en"],
+    "official_sdks": 7,
+    "active_models": 3
+  },
+  "categories": {
+    "docs": {
+      "name": "Claude Documentation",
+      "description": "Documentação principal do Claude incluindo API e guias de desenvolvimento",
+      "base_url": "https://docs.claude.com",
+      "file_count": 5,
+      "topics": [
+        "Introduction",
+        "Getting Started",
+        "Models Overview",
+        "Prompt Engineering",
+        "Prompt Caching",
+        "API Reference",
+        "Capabilities",
+        "Tools",
+        "Agent Skills",
+        "Agent SDK"
+      ]
+    },
+    "code": {
+      "name": "Claude Code Documentation",
+      "description": "Documentação do Claude Code - CLI oficial da Anthropic",
+      "base_url": "https://code.claude.com/docs",
+      "file_count": 1,
+      "topics": [
+        "Installation",
+        "Overview",
+        "Quickstart",
+        "Common Workflows",
+        "IDE Integrations",
+        "VS Code Extension",
+        "Settings",
+        "CLI Reference",
+        "MCP Integration",
+        "Security"
+      ]
+    },
+    "engineering": {
+      "name": "Anthropic Engineering Blog",
+      "description": "Artigos técnicos do blog de engenharia da Anthropic",
+      "base_url": "https://www.anthropic.com/engineering",
+      "file_count": 3,
+      "topics": [
+        "Building Effective Agents",
+        "Code Execution with MCP",
+        "Agent Skills",
+        "Claude Code Best Practices",
+        "Multi-Agent Systems",
+        "Contextual Retrieval",
+        "SWE-bench Results"
+      ]
+    },
+    "api": {
+      "name": "API Reference",
+      "description": "Referência completa da API Claude",
+      "base_url": "https://docs.claude.com/en/api",
+      "file_count": 1,
+      "endpoints": [
+        "Messages",
+        "Models",
+        "Message Batches",
+        "Files",
+        "Skills",
+        "Admin API"
+      ]
+    },
+    "learn": {
+      "name": "Learning Resources",
+      "description": "Recursos de aprendizado e cursos da Anthropic",
+      "base_url": "https://www.anthropic.com/learn",
+      "file_count": 0,
+      "sections": [
+        "Build with Claude",
+        "Claude for Work",
+        "Claude for You",
+        "Anthropic Academy"
+      ]
+    },
+    "news": {
+      "name": "News and Updates",
+      "description": "Notícias, comunicados e release notes",
+      "base_url": "https://www.anthropic.com/news",
+      "file_count": 0,
+      "recent_updates": [
+        "Claude Sonnet 4.5 Launch",
+        "Claude Haiku 4.5 Launch",
+        "Agent Skills Release",
+        "Series F Funding",
+        "Economic Index Report"
+      ]
+    }
+  },
+  "models": {
+    "active": [
+      {
+        "name": "Claude Sonnet 4.5",
+        "api_id": "claude-sonnet-4-5-20250929",
+        "release_date": "2025-09-29",
+        "pricing": {
+          "input": "$3/MTok",
+          "output": "$15/MTok"
+        },
+        "context_window": "200K tokens (1M beta)",
+        "max_output": "64K tokens",
+        "knowledge_cutoff": "2025-01"
+      },
+      {
+        "name": "Claude Haiku 4.5",
+        "api_id": "claude-haiku-4-5-20251001",
+        "release_date": "2025-10-15",
+        "pricing": {
+          "input": "$1/MTok",
+          "output": "$5/MTok"
+        },
+        "context_window": "200K tokens",
+        "max_output": "64K tokens",
+        "knowledge_cutoff": "2025-02"
+      },
+      {
+        "name": "Claude Opus 4.1",
+        "api_id": "claude-opus-4-1-20250805",
+        "release_date": "2025-08-05",
+        "pricing": {
+          "input": "$15/MTok",
+          "output": "$75/MTok"
+        },
+        "context_window": "200K tokens",
+        "max_output": "32K tokens"
+      }
+    ]
+  },
+  "sdks": {
+    "official": [
+      {
+        "language": "Python",
+        "status": "GA",
+        "repository": "https://github.com/anthropics/anthropic-sdk-python"
+      },
+      {
+        "language": "TypeScript",
+        "status": "GA",
+        "repository": "https://github.com/anthropics/anthropic-sdk-typescript"
+      },
+      {
+        "language": "Java",
+        "status": "GA"
+      },
+      {
+        "language": "Go",
+        "status": "GA"
+      },
+      {
+        "language": "Ruby",
+        "status": "GA"
+      },
+      {
+        "language": "C#",
+        "status": "Beta"
+      },
+      {
+        "language": "PHP",
+        "status": "Beta"
+      }
+    ]
+  },
+  "features": {
+    "general_availability": [
+      "Prompt Caching (5m and 1h)",
+      "Message Batches API",
+      "Token Counting",
+      "Search Result Blocks",
+      "Admin API",
+      "Extended Thinking",
+      "Agent Skills",
+      "Memory Tool",
+      "Web Search",
+      "Code Execution v2"
+    ],
+    "beta": [
+      "Context Editing",
+      "Fine-grained Tool Streaming",
+      "VS Code Extension",
+      "1M Context Window",
+      "MCP Connector"
+    ]
+  },
+  "resources": {
+    "repositories": [
+      {
+        "name": "Anthropic Cookbook",
+        "url": "https://github.com/anthropics/anthropic-cookbook",
+        "description": "Jupyter notebooks with code examples"
+      },
+      {
+        "name": "Anthropic Quickstarts",
+        "url": "https://github.com/anthropics/anthropic-quickstarts",
+        "description": "Deployable applications"
+      },
+      {
+        "name": "Claude Code",
+        "url": "https://github.com/anthropics/claude-code",
+        "description": "Official CLI repository"
+      }
+    ],
+    "external_links": [
+      {
+        "name": "Claude Console",
+        "url": "https://console.anthropic.com",
+        "type": "tool"
+      },
+      {
+        "name": "Claude.ai",
+        "url": "https://claude.ai",
+        "type": "product"
+      },
+      {
+        "name": "Support Center",
+        "url": "https://support.anthropic.com",
+        "type": "support"
+      },
+      {
+        "name": "Trust Center",
+        "url": "https://trust.anthropic.com",
+        "type": "compliance"
+      },
+      {
+        "name": "Status Page",
+        "url": "https://status.anthropic.com",
+        "type": "monitoring"
+      },
+      {
+        "name": "Discord Community",
+        "url": "https://discord.gg/anthropic",
+        "type": "community"
+      }
+    ]
+  },
+  "file_structure": {
+    "root_files": [
+      "url-tree-complete.md",
+      "index.md",
+      "metadata.json",
+      "README.md",
+      "CLAUDE.md"
+    ],
+    "directories": [
+      {
+        "name": "docs",
+        "files": [
+          "01-introduction-to-claude.md",
+          "02-get-started.md",
+          "03-models-overview.md",
+          "04-prompt-engineering-best-practices.md",
+          "05-prompt-caching.md"
+        ]
+      },
+      {
+        "name": "api",
+        "files": [
+          "01-api-overview.md"
+        ]
+      },
+      {
+        "name": "code",
+        "files": [
+          "01-claude-code-overview.md"
+        ]
+      },
+      {
+        "name": "engineering",
+        "files": [
+          "01-building-effective-agents.md",
+          "02-code-execution-with-mcp.md",
+          "03-agent-skills.md"
+        ]
+      },
+      {
+        "name": "learn",
+        "files": []
+      },
+      {
+        "name": "news",
+        "files": []
+      },
+      {
+        "name": "resources",
+        "files": []
+      }
+    ]
+  },
+  "mapping_methodology": {
+    "approach": "Systematic web scraping and content extraction",
+    "tools_used": ["WebFetch", "AI-assisted content extraction"],
+    "quality_control": "Manual review and organization",
+    "coverage": "Comprehensive mapping of all major documentation sections"
+  },
+  "notes": [
+    "Documentation is continuously evolving",
+    "Some resources are in Beta and subject to change",
+    "Portuguese URLs may redirect to English when content is not translated",
+    "This is a snapshot as of 2025-11-06"
+  ],
+  "contact": {
+    "press": "press@anthropic.com",
+    "support": "support@anthropic.com"
+  }
+}
