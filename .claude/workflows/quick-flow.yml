@@ -1,0 +1,41 @@
+# Quick Flow - For bug fixes and small changes
+
+name: Quick Flow
+description: Fast workflow for bugs, hotfixes, and small changes (no PRD/Architecture)
+complexity: simple
+estimatedTime: 15-30min
+
+phases:
+  - name: Development
+    agent: developer
+    tasks:
+      - Analyze bug/change request
+      - Detect stack (frontend/backend/database)
+      - Load appropriate specialist
+      - Implement fix
+      - Write test (regression)
+
+  - name: Testing
+    agent: qa-engineer
+    tasks:
+      - Execute tests
+      - Validate fix works
+      - Check no regressions
+
+  - name: Delivery
+    tasks:
+      - Run linter
+      - Git commit (format: "fix: description")
+      - Push to branch
+
+success_criteria:
+  - Tests passing
+  - Linter passing
+  - Committed and pushed
+
+when_to_use:
+  - Bug fixes
+  - Small code changes (< 100 lines)
+  - No architecture changes
+  - No new dependencies
+  - Hotfixes

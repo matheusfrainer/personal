@@ -1,0 +1,67 @@
+# Standard Flow - For medium features
+
+name: Standard Flow
+description: Full planning workflow for standard features
+complexity: medium
+estimatedTime: 1-3h
+
+phases:
+  - name: Planning
+    agent: product-manager
+    tasks:
+      - Create PRD
+      - Define user stories
+      - Write acceptance criteria
+      - Save to docs/prd/{feature}.md
+
+  - name: Architecture
+    agent: architect
+    tasks:
+      - Read PRD
+      - Detect context (frontend/backend/data/security)
+      - Load appropriate specialists
+      - Design architecture
+      - Write ADRs if needed
+      - Save to docs/architecture/{feature}.md
+
+  - name: Development
+    agent: developer
+    tasks:
+      - Read PRD and architecture
+      - Detect stack
+      - Load appropriate specialists
+      - Implement feature
+      - Write tests (TDD when possible)
+
+  - name: Quality Assurance
+    agent: qa-engineer
+    tasks:
+      - Read PRD acceptance criteria
+      - Detect test type needed
+      - Load appropriate specialists
+      - Write comprehensive tests
+      - Execute and validate
+      - Generate test report
+
+  - name: Delivery
+    tasks:
+      - Run all tests
+      - Run linter
+      - Git commit (format: "feat: description")
+      - Push to branch
+      - Create PR (optional)
+
+success_criteria:
+  - PRD created
+  - Architecture documented
+  - Tests passing (>80% coverage)
+  - Linter passing
+  - All acceptance criteria met
+  - Committed and pushed
+
+when_to_use:
+  - New features
+  - Moderate complexity
+  - Architecture changes
+  - New dependencies OK
+  - 100-500 lines of code

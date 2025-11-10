@@ -1,0 +1,111 @@
+# Guardrails - Validation rules and limits for the multi-agent system
+
+code_quality:
+  max_file_size: 500 # lines
+  max_function_size: 50 # lines
+  max_nesting_depth: 3
+  max_params: 5
+  max_files_per_task: 3
+
+  naming:
+    - no_single_letters: true # except i, j in loops
+    - min_length: 2
+    - use_descriptive_names: true
+
+security:
+  no_hardcoded_secrets: true
+  no_sql_injection: true # use parameterized queries
+  no_xss_vulnerabilities: true
+  password_min_length: 8
+  password_hashing: bcrypt # or argon2
+  jwt_algorithm: RS256 # not HS256
+
+  forbidden_patterns:
+    - pattern: "(password|secret|api_key)\\s*=\\s*['\"][^'\"]+['\"]"
+      message: "Hardcoded secrets detected"
+    - pattern: "eval\\("
+      message: "eval() is dangerous"
+    - pattern: "dangerouslySetInnerHTML"
+      message: "XSS risk - sanitize first"
+
+testing:
+  min_coverage: 80 # percent
+  critical_path_coverage: 100
+  required_test_types:
+    - unit
+    - integration
+
+  test_patterns:
+    - "*.test.ts"
+    - "*.test.tsx"
+    - "*.spec.ts"
+
+performance:
+  frontend:
+    bundle_size_limit: 200 # kb (gzipped)
+    lighthouse_min_score: 90
+    max_component_size: 200 # lines
+
+  backend:
+    max_response_time_p95: 200 # ms
+    max_query_time: 50 # ms
+    connection_pool_max: 20
+
+validation:
+  required_on_inputs: true
+  use_schema_validation: true # Zod, Joi, etc
+  sanitize_outputs: true
+
+git:
+  commit_message_format: "^(feat|fix|docs|refactor|test|chore):\\s.{10,}$"
+  max_commit_size: 1000 # lines changed
+  require_tests_for_features: true
+
+documentation:
+  require_for_public_api: true
+  require_for_complex_logic: true
+  max_function_without_comment: 30 # lines
+
+errors:
+  no_silent_failures: true
+  always_handle_async_errors: true
+  no_console_log_in_production: true
+  structured_logging: true
+
+database:
+  require_indexes_on_fks: true
+  require_migrations_reversible: true
+  no_auto_increment_in_distributed: true # use UUID
+  always_add_timestamps: true # created_at, updated_at
+
+accessibility:
+  wcag_level: AA # or AAA
+  require_aria_labels: true
+  semantic_html_required: true
+  keyboard_navigation_required: true
+
+rate_limiting:
+  default_limit: 100 # requests per 15 min
+  auth_endpoints_limit: 5 # requests per 15 min
+  enable_by_default: true
+
+violations:
+  critical:
+    action: block # prevent commit
+    examples:
+      - hardcoded_secrets
+      - sql_injection
+      - missing_auth_on_protected_routes
+
+  warning:
+    action: warn # allow but warn
+    examples:
+      - missing_tests
+      - low_coverage
+      - large_functions
+
+  info:
+    action: log # just log
+    examples:
+      - code_style
+      - naming_conventions

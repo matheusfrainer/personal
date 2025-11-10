@@ -1,0 +1,92 @@
+# Enterprise Flow - For complex/critical features
+
+name: Enterprise Flow
+description: Comprehensive workflow for complex or critical features
+complexity: high
+estimatedTime: 4-8h
+
+phases:
+  - name: Analysis
+    agent: product-manager
+    tasks:
+      - Research and analysis
+      - Create comprehensive PRD
+      - Define detailed user stories
+      - Business impact analysis
+      - Risk assessment
+      - Save to docs/prd/{feature}.md
+
+  - name: Architecture
+    agent: architect
+    tasks:
+      - Read PRD
+      - Load all relevant specialists (frontend/backend/data/security)
+      - Comprehensive architecture design
+      - Security review
+      - Scalability planning
+      - Write multiple ADRs
+      - Save to docs/architecture/{feature}.md
+
+  - name: Infrastructure Setup
+    agent: devops
+    tasks:
+      - Review architecture
+      - Setup CI/CD if needed
+      - Configure environments
+      - Security scanning setup
+      - Monitoring setup
+
+  - name: Development
+    agent: developer
+    tasks:
+      - Read PRD and architecture
+      - Implement incrementally
+      - Write tests for each increment
+      - Code review checkpoints
+
+  - name: Comprehensive Testing
+    agent: qa-engineer
+    tasks:
+      - Unit tests
+      - Integration tests
+      - E2E tests for critical flows
+      - Performance testing
+      - Security testing
+      - Accessibility validation
+      - Generate comprehensive test report
+
+  - name: Pre-Production
+    agent: devops
+    tasks:
+      - Deploy to staging
+      - Run smoke tests
+      - Performance validation
+      - Security scan
+
+  - name: Delivery
+    tasks:
+      - Final validation
+      - Documentation review
+      - Git commit
+      - Push to branch
+      - Create PR with detailed description
+      - Deployment plan documentation
+
+success_criteria:
+  - Comprehensive PRD
+  - Architecture fully documented
+  - Security reviewed
+  - Tests passing (>90% coverage)
+  - Performance validated
+  - Staging deployment successful
+  - All acceptance criteria met
+  - PR created with deployment plan
+
+when_to_use:
+  - Critical features
+  - Complex systems
+  - Security-sensitive
+  - Performance-critical
+  - > 500 lines of code
+  - Multiple integrations
+  - Production impact
