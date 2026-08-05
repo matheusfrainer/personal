@@ -3,9 +3,11 @@ import type { PersistedState } from "./store"
 const KEY = "whatsapp-shadcn:state:v2"
 
 /**
- * Transient UI state must never reach storage. `typing` in particular is set
- * by the reply simulation — persisting it leaves a chat stuck on "digitando…"
- * forever if the page is reloaded mid-simulation.
+ * Transient UI state must never cross the storage boundary — in either
+ * direction. `typing` is set by the reply simulation; persisting it leaves a
+ * chat stuck on "digitando…" forever. Guarding only the write is not enough:
+ * a payload that already carries the flag (an older build, a hand-edited
+ * value) would hydrate straight into the UI, so reads are sanitised too.
  */
 function sanitize(state: PersistedState): PersistedState {
   return {
@@ -45,7 +47,7 @@ export function loadState(): PersistedState | null {
     ) {
       return null
     }
-    return {
+    return sanitize({
       chats: parsed.chats,
       calls: parsed.calls ?? [],
       communities: parsed.communities ?? [],
@@ -54,7 +56,7 @@ export function loadState(): PersistedState | null {
         notifications: parsed.preferences?.notifications ?? true,
         readReceipts: parsed.preferences?.readReceipts ?? true,
       },
-    }
+    })
   } catch {
     // Corrupt or unavailable storage (private mode, quota) — fall back to seed.
     return null

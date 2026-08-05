@@ -40,44 +40,38 @@ test("persists messages across a reload", async ({ page }) => {
 
 test("never restores a stuck typing indicator", async ({ page }) => {
   // Regression: `typing` used to be persisted, so reloading mid-simulation left
-  // a chat stuck on "digitando…" forever. Seed storage with the broken shape so
-  // the test actually exercises hydration instead of only reading the seed.
-  await page.goto("/?e2e=1")
-  await page.evaluate(() => {
-    window.localStorage.setItem(
-      "whatsapp-shadcn:state:v2",
-      JSON.stringify({
-        chats: [
+  // a chat stuck on "digitando…" forever.
+  //
+  // The seed goes in through addInitScript so it lands before any app code
+  // runs. Writing it into a live page would race the store's pagehide flush,
+  // which rewrites storage from memory on the way out and would erase it.
+  const stuck = JSON.stringify({
+    chats: [
+      {
+        id: "stuck",
+        name: "Contato Travado",
+        tint: "neutral",
+        time: "09:00",
+        typing: true,
+        conversation: [
           {
-            id: "stuck",
-            name: "Contato Travado",
-            tint: "neutral",
-            time: "09:00",
-            typing: true,
-            conversation: [
-              {
-                label: "Hoje",
-                messages: [
-                  {
-                    id: "m1",
-                    type: "text",
-                    fromMe: false,
-                    text: "oi",
-                    time: "09:00",
-                  },
-                ],
-              },
+            label: "Hoje",
+            messages: [
+              { id: "m1", type: "text", fromMe: false, text: "oi", time: "09:00" },
             ],
           },
         ],
-        calls: [],
-        communities: [],
-        blocked: [],
-        preferences: { notifications: true, readReceipts: true },
-      })
-    )
+      },
+    ],
+    calls: [],
+    communities: [],
+    blocked: [],
+    preferences: { notifications: true, readReceipts: true },
   })
-  await page.reload()
+  await page.addInitScript((payload) => {
+    window.localStorage.setItem("whatsapp-shadcn:state:v2", payload as string)
+  }, stuck)
+  await page.goto("/?e2e=1")
 
   // The chat hydrates, but the transient flag must not survive into the UI…
   await expect(page.getByRole("button", { name: /Contato Travado/ })).toBeVisible()

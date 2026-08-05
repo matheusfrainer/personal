@@ -43,14 +43,15 @@ if (typeof window !== "undefined") {
 
 export function useSendMessage(chat: Chat) {
   const { state, dispatch } = useStore()
-  const notify = state.preferences.notifications
 
-  // Read the open chat at fire time, not at send time — the user may have
-  // navigated away while the simulated reply was pending.
+  // Both of these are read at fire time, not at send time: while the reply is
+  // pending the user may navigate to another chat *or* turn notifications off.
   const selectedIdRef = React.useRef(state.selectedId)
+  const notifyRef = React.useRef(state.preferences.notifications)
   React.useEffect(() => {
     selectedIdRef.current = state.selectedId
-  }, [state.selectedId])
+    notifyRef.current = state.preferences.notifications
+  }, [state.selectedId, state.preferences.notifications])
 
   const later = React.useCallback((fn: () => void, ms: number) => {
     const id = window.setTimeout(() => {
@@ -113,11 +114,11 @@ export function useSendMessage(chat: Chat) {
         dispatch({ type: "SEND", chatId, message: reply })
         // Notify only for chats the user isn't currently looking at, and only
         // when notifications are enabled in Settings.
-        if (notify && chatId !== selectedIdRef.current) {
+        if (notifyRef.current && chatId !== selectedIdRef.current) {
           toast(chat.name, { description: reply.text })
         }
       }, 2600)
     },
-    [chat.id, chat.isGroup, chat.members, chat.name, dispatch, later, notify, state.replyToId]
+    [chat.id, chat.isGroup, chat.members, chat.name, dispatch, later, state.replyToId]
   )
 }
