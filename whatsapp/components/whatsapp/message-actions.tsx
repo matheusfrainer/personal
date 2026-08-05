@@ -22,6 +22,7 @@ import {
   ChevronDownIcon,
   CopyIcon,
   DeleteIcon,
+  EditIcon,
   EmojiIcon,
   ForwardIcon,
   PinIcon,
@@ -43,6 +44,7 @@ interface MessageActionsProps {
   onPin: () => void
   onForward: () => void
   onSelect: () => void
+  onEdit: () => void
 }
 
 export function MessageActions({
@@ -54,6 +56,7 @@ export function MessageActions({
   onPin,
   onForward,
   onSelect,
+  onEdit,
 }: MessageActionsProps) {
   const [reactOpen, setReactOpen] = React.useState(false)
 
@@ -123,6 +126,12 @@ export function MessageActions({
             <Icon icon={PinIcon} />
             {message.pinned ? "Desafixar" : "Fixar"}
           </DropdownMenuItem>
+          {message.fromMe && message.type === "text" ? (
+            <DropdownMenuItem onSelect={onEdit}>
+              <Icon icon={EditIcon} />
+              Editar
+            </DropdownMenuItem>
+          ) : null}
           {message.type === "text" ? (
             <DropdownMenuItem onSelect={copy}>
               <Icon icon={CopyIcon} />

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { avatarTints, communities, initials } from "@/lib/data"
+import { avatarTints, initials } from "@/lib/data"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -15,9 +15,7 @@ import { CommunitiesIcon, NotificationIcon } from "./icons"
 /** Communities: an announcement board plus the groups that belong to it. */
 export function CommunitiesView() {
   const { state, dispatch } = useStore()
-  const [openId, setOpenId] = React.useState<string | null>(
-    communities[0]?.id ?? null
-  )
+  const [openId, setOpenId] = React.useState<string | null>(null)
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
@@ -26,7 +24,7 @@ export function CommunitiesView() {
       </header>
 
       <div className="thin-scroll min-h-0 flex-1 overflow-y-auto pb-4">
-        {communities.map((community) => {
+        {state.communities.map((community) => {
           const open = openId === community.id
           const groups = state.chats.filter((c) =>
             community.groupIds.includes(c.id)

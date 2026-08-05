@@ -25,6 +25,10 @@ export {
   CallIncoming01Icon as CallIncomingIcon,
   CallOutgoing01Icon as CallOutgoingIcon,
   CallMissed01Icon as CallMissedIcon,
+  CallEnd01Icon as CallEndIcon,
+  MicOff01Icon as MicOffIcon,
+  VideoOffIcon as VideoOffIcon,
+  VolumeHighIcon as SpeakerIcon,
   // Composer
   Attachment01Icon as AttachIcon,
   PlusSignIcon as PlusIcon,

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { lastMessage, messagePreview } from "@/lib/data"
+import { allMessages, messagePreview } from "@/lib/data"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -60,10 +60,10 @@ export function ChatList() {
         if (filter === "favourites" && !chat.favourite) return false
         if (filter === "groups" && !chat.isGroup) return false
         if (!q) return true
-        const last = lastMessage(chat)
-        return (
-          chat.name.toLowerCase().includes(q) ||
-          (last ? messagePreview(last).toLowerCase().includes(q) : false)
+        if (chat.name.toLowerCase().includes(q)) return true
+        // Search the whole transcript, not just the last message.
+        return allMessages(chat).some((m) =>
+          messagePreview(m).toLowerCase().includes(q)
         )
       })
       .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned))

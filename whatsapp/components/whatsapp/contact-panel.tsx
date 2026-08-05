@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner"
 
 import { allMessages, avatarTints, initials } from "@/lib/data"
 import { useStore } from "@/lib/store"
@@ -48,7 +49,8 @@ export function ContactPanel({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const { dispatch } = useStore()
+  const { state, dispatch } = useStore()
+  const blocked = state.blocked.includes(chat.id)
 
   const { media, docs, starred } = React.useMemo(() => {
     const all = allMessages(chat).filter((m) => !m.deleted)
@@ -219,11 +221,32 @@ export function ContactPanel({
           <Separator />
 
           <section className="flex flex-col gap-1 p-2">
-            <Button variant="ghost" className="justify-start text-destructive">
+            <Button
+              variant="ghost"
+              className="justify-start text-destructive"
+              onClick={() => {
+                const next = !blocked
+                dispatch({ type: "SET_BLOCKED", chatId: chat.id, value: next })
+                toast(
+                  next
+                    ? `${chat.name} foi bloqueado`
+                    : `${chat.name} foi desbloqueado`
+                )
+              }}
+            >
               <Icon icon={BlockIcon} />
-              Bloquear {chat.isGroup ? "grupo" : chat.name.split(" ")[0]}
+              {blocked ? "Desbloquear" : "Bloquear"}{" "}
+              {chat.isGroup ? "grupo" : chat.name.split(" ")[0]}
             </Button>
-            <Button variant="ghost" className="justify-start text-destructive">
+            <Button
+              variant="ghost"
+              className="justify-start text-destructive"
+              onClick={() =>
+                toast("Denúncia enviada", {
+                  description: `As últimas mensagens de ${chat.name} foram enviadas para análise.`,
+                })
+              }
+            >
               <Icon icon={ReportIcon} />
               Denunciar
             </Button>

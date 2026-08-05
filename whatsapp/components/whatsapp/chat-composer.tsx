@@ -46,13 +46,26 @@ import { useSendMessage } from "./use-send-message"
 export function ChatComposer({ chat }: { chat: Chat }) {
   const { state, dispatch } = useStore()
   const send = useSendMessage(chat)
-  const [value, setValue] = React.useState("")
+  // Seeded from the chat's draft. The parent mounts this with key={chat.id},
+  // so switching conversations gives a fresh box instead of carrying text over
+  // and stamping it as the next chat's draft.
+  const [value, setValue] = React.useState(chat.draft ?? "")
   const [emojiOpen, setEmojiOpen] = React.useState(false)
   const [recording, setRecording] = React.useState(false)
   const [seconds, setSeconds] = React.useState(0)
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
   const replyTo = state.replyToId ? findMessage(chat, state.replyToId) : undefined
+  const editing = state.editingId ? findMessage(chat, state.editingId) : undefined
+
+  // Load the message text when an edit starts (in-render derived state, so no
+  // setState-in-effect).
+  const [editingId, setEditingId] = React.useState(state.editingId)
+  if (editingId !== state.editingId) {
+    setEditingId(state.editingId)
+    if (editing && editing.type === "text") setValue(editing.text)
+    if (!state.editingId) setValue("")
+  }
   const hasText = value.trim().length > 0
 
   // Focus the box when a reply starts, like the real app.
@@ -70,18 +83,32 @@ export function ChatComposer({ chat }: { chat: Chat }) {
   // Persist the draft so it shows in the chat list, as WhatsApp does.
   React.useEffect(() => {
     const id = window.setTimeout(() => {
-      if ((chat.draft ?? "") !== value) {
+      if (!state.editingId && (chat.draft ?? "") !== value) {
         dispatch({ type: "SET_DRAFT", chatId: chat.id, draft: value })
       }
     }, 400)
     return () => window.clearTimeout(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, chat.id])
+  }, [value, chat.id, state.editingId])
 
   function sendText() {
     const text = value.trim()
     if (!text) return
-    send({ type: "text", text })
+    if (editing) {
+      dispatch({
+        type: "EDIT_MESSAGE",
+        chatId: chat.id,
+        messageId: editing.id,
+        text,
+      })
+    } else {
+      send({ type: "text", text })
+    }
+    setValue("")
+  }
+
+  function cancelEdit() {
+    dispatch({ type: "SET_EDITING", messageId: null })
     setValue("")
   }
 
@@ -90,8 +117,9 @@ export function ChatComposer({ chat }: { chat: Chat }) {
       e.preventDefault()
       sendText()
     }
-    if (e.key === "Escape" && replyTo) {
-      dispatch({ type: "SET_REPLY", messageId: null })
+    if (e.key === "Escape") {
+      if (editing) cancelEdit()
+      else if (replyTo) dispatch({ type: "SET_REPLY", messageId: null })
     }
   }
 
@@ -111,8 +139,30 @@ export function ChatComposer({ chat }: { chat: Chat }) {
 
   return (
     <div className="border-t border-border bg-background">
+      {/* Editing banner */}
+      {editing ? (
+        <div className="flex items-center gap-2 px-3 pt-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-md border-l-2 border-foreground/40 bg-muted/60 px-2.5 py-1.5">
+            <span className="text-[0.6875rem] font-semibold">
+              Editando mensagem
+            </span>
+            <span className="truncate text-xs text-muted-foreground">
+              {messagePreview(editing)}
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Cancelar edição"
+            onClick={cancelEdit}
+          >
+            <Icon icon={CloseIcon} />
+          </Button>
+        </div>
+      ) : null}
+
       {/* Reply preview */}
-      {replyTo ? (
+      {replyTo && !editing ? (
         <div className="flex items-center gap-2 px-3 pt-2">
           <div className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-md border-l-2 border-foreground/40 bg-muted/60 px-2.5 py-1.5">
             <span className="text-[0.6875rem] font-semibold">

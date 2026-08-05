@@ -49,10 +49,10 @@ function Row({
 }
 
 export function SettingsView() {
-  const { dispatch } = useStore()
+  const { state, dispatch } = useStore()
   const { resolvedTheme, setTheme } = useTheme()
-  const [notifications, setNotifications] = React.useState(true)
-  const [readReceipts, setReadReceipts] = React.useState(true)
+  const { notifications, readReceipts } = state.preferences
+  const blockedChats = state.chats.filter((c) => state.blocked.includes(c.id))
 
   const mounted = useHydrated()
   const isDark = mounted && resolvedTheme === "dark"
@@ -99,17 +99,27 @@ export function SettingsView() {
         <Row
           icon={NotificationIcon}
           title="Notificações"
-          description="Mostrar avisos de novas mensagens"
+          description="Avisar quando chegar mensagem em outra conversa"
         >
-          <Switch checked={notifications} onCheckedChange={setNotifications} />
+          <Switch
+            checked={notifications}
+            onCheckedChange={(value) =>
+              dispatch({ type: "SET_PREFERENCE", key: "notifications", value })
+            }
+          />
         </Row>
 
         <Row
           icon={LockIcon}
           title="Confirmações de leitura"
-          description="Se desativado, você não envia nem recebe confirmações"
+          description="Se desativado, o tique azul deixa de aparecer"
         >
-          <Switch checked={readReceipts} onCheckedChange={setReadReceipts} />
+          <Switch
+            checked={readReceipts}
+            onCheckedChange={(value) =>
+              dispatch({ type: "SET_PREFERENCE", key: "readReceipts", value })
+            }
+          />
         </Row>
 
         <Separator />
@@ -124,7 +134,32 @@ export function SettingsView() {
           </Button>
         </Row>
 
-        <Row icon={BlockIcon} title="Contatos bloqueados" description="Nenhum" />
+        <Row
+          icon={BlockIcon}
+          title="Contatos bloqueados"
+          description={
+            blockedChats.length
+              ? blockedChats.map((c) => c.name).join(", ")
+              : "Nenhum"
+          }
+        />
+        {blockedChats.map((c) => (
+          <div
+            key={c.id}
+            className="flex items-center gap-3 py-1 pr-4 pl-11 text-sm"
+          >
+            <span className="flex-1 truncate">{c.name}</span>
+            <Button
+              size="xs"
+              variant="outline"
+              onClick={() =>
+                dispatch({ type: "SET_BLOCKED", chatId: c.id, value: false })
+              }
+            >
+              Desbloquear
+            </Button>
+          </div>
+        ))}
 
         <Separator />
 

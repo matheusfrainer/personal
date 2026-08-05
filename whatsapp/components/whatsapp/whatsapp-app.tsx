@@ -4,8 +4,10 @@ import * as React from "react"
 
 import { StoreProvider, useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
+import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
+import { CallProvider } from "./call-overlay"
 import { CallsView } from "./calls-view"
 import { ChatList } from "./chat-list"
 import { CommunitiesView } from "./communities-view"
@@ -107,7 +109,10 @@ export function WhatsappApp() {
   return (
     <StoreProvider>
       <TooltipProvider delayDuration={200}>
-        <Shell />
+        <CallProvider>
+          <Shell />
+          <Toaster position="top-right" />
+        </CallProvider>
       </TooltipProvider>
     </StoreProvider>
   )

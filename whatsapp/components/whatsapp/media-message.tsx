@@ -1,8 +1,11 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner"
 
+import { buildPdf, downloadBlob, downloadDataUri } from "@/lib/download"
 import { formatDuration } from "@/lib/media"
+import { useStore } from "@/lib/store"
 import type {
   ContactMessage,
   DocumentMessage,
@@ -68,11 +71,21 @@ export function ImageBubbleMessage({ message }: { message: ImageMessage }) {
             alt={message.caption ?? "Foto"}
             className="max-h-[75vh] w-full rounded-md object-contain"
           />
-          {message.caption ? (
-            <p className="text-center text-xs text-muted-foreground">
-              {message.caption}
+          <div className="flex items-center justify-between gap-3">
+            <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+              {message.caption ?? "Foto"}
             </p>
-          ) : null}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                downloadDataUri(message.url, `foto-${message.id}.svg`)
+              }
+            >
+              <Icon icon={DownloadIcon} />
+              Baixar
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -133,7 +146,25 @@ export function DocumentBubbleMessage({
         </AttachmentDescription>
       </AttachmentContent>
       <AttachmentActions>
-        <AttachmentAction aria-label="Baixar">
+        <AttachmentAction
+          aria-label="Baixar"
+          onClick={() =>
+            downloadBlob(
+              buildPdf(message.filename, [
+                "Documento de exemplo gerado por este clone.",
+                [
+                  message.pages ? `${message.pages} paginas` : null,
+                  message.ext,
+                  message.size,
+                ]
+                  .filter(Boolean)
+                  .join(" - "),
+              ]),
+              "application/pdf",
+              message.filename
+            )
+          }
+        >
           <Icon icon={DownloadIcon} />
         </AttachmentAction>
       </AttachmentActions>
@@ -169,6 +200,8 @@ export function LocationBubbleMessage({
 }
 
 export function ContactBubbleMessage({ message }: { message: ContactMessage }) {
+  const { state, dispatch } = useStore()
+
   return (
     <div className="flex w-56 flex-col gap-2">
       <div className="flex items-center gap-2">
@@ -180,7 +213,24 @@ export function ContactBubbleMessage({ message }: { message: ContactMessage }) {
           <p className="truncate text-[0.6875rem] opacity-70">{message.phone}</p>
         </div>
       </div>
-      <Button size="xs" variant="secondary" className="w-full">
+      <Button
+        size="xs"
+        variant="secondary"
+        className="w-full"
+        onClick={() => {
+          // Open the contact's chat if this clone happens to have one.
+          const match = state.chats.find(
+            (c) => c.name === message.contactName || c.phone === message.phone
+          )
+          if (match) {
+            dispatch({ type: "SELECT_CHAT", chatId: match.id })
+          } else {
+            toast(message.contactName, {
+              description: "Este contato ainda não tem conversa neste aparelho.",
+            })
+          }
+        }}
+      >
         <Icon icon={PhoneIcon} />
         Conversar
       </Button>

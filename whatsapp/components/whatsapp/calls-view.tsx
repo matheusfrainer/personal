@@ -1,7 +1,6 @@
 "use client"
 
 import { avatarTints, initials } from "@/lib/data"
-import { calls } from "@/lib/data"
 import { useStore } from "@/lib/store"
 import type { CallEntry } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -13,6 +12,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+import { useCall } from "./call-overlay"
 import { Icon } from "./icon"
 import {
   CallIncomingIcon,
@@ -35,7 +35,8 @@ function directionLabel(entry: CallEntry) {
 
 /** Call history list — the "Chamadas" area of the nav rail. */
 export function CallsView() {
-  const { dispatch } = useStore()
+  const { state, dispatch } = useStore()
+  const { start } = useCall()
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
@@ -44,7 +45,12 @@ export function CallsView() {
       </header>
 
       <div className="thin-scroll min-h-0 flex-1 overflow-y-auto">
-        {calls.map((entry) => (
+        {state.calls.length === 0 ? (
+          <p className="px-4 py-10 text-center text-xs text-muted-foreground">
+            Nenhuma chamada no histórico.
+          </p>
+        ) : null}
+        {state.calls.map((entry) => (
           <div
             key={entry.id}
             className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted"
@@ -93,6 +99,14 @@ export function CallsView() {
                   size="icon"
                   aria-label={
                     entry.kind === "video" ? "Chamar em vídeo" : "Chamar por voz"
+                  }
+                  onClick={() =>
+                    start({
+                      chatId: entry.chatId,
+                      name: entry.name,
+                      tint: entry.tint,
+                      kind: entry.kind,
+                    })
                   }
                 >
                   <Icon icon={entry.kind === "video" ? VideoIcon : PhoneIcon} />

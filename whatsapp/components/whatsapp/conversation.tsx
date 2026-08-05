@@ -4,7 +4,7 @@ import * as React from "react"
 
 import { allMessages, avatarTints, findMessage, initials, messagePreview } from "@/lib/data"
 import { useStore } from "@/lib/store"
-import type { Chat, Message } from "@/lib/types"
+import type { CallKind, Chat, Message } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -31,6 +31,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+import { useCall } from "./call-overlay"
 import { ChatComposer } from "./chat-composer"
 import { ContactPanel } from "./contact-panel"
 import { ConversationSearch } from "./conversation-search"
@@ -180,6 +181,9 @@ function Transcript({
                         })
                       }
                       onForward={() => onForwardRequest([message])}
+                      onEdit={() =>
+                        dispatch({ type: "SET_EDITING", messageId: message.id })
+                      }
                       onJumpToReply={(id) => scrollToMessage(id, { align: "center" })}
                     />
                   </MessageScrollerItem>
@@ -226,6 +230,10 @@ export function Conversation({ chat }: { chat: Chat }) {
   )
   const selectedIds = state.selectedMessageIds
   const selectionMode = selectedIds.length > 0
+  const { start } = useCall()
+  const startCall = (c: Chat, kind: CallKind) =>
+    start({ chatId: c.id, name: c.name, tint: c.tint, kind })
+  const isBlocked = state.blocked.includes(chat.id)
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -329,7 +337,12 @@ export function Conversation({ chat }: { chat: Chat }) {
           <div className="flex items-center gap-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Chamada de vídeo">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Chamada de vídeo"
+                  onClick={() => startCall(chat, "video")}
+                >
                   <Icon icon={VideoIcon} />
                 </Button>
               </TooltipTrigger>
@@ -337,7 +350,12 @@ export function Conversation({ chat }: { chat: Chat }) {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Chamada de voz">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Chamada de voz"
+                  onClick={() => startCall(chat, "voice")}
+                >
                   <Icon icon={PhoneIcon} />
                 </Button>
               </TooltipTrigger>
@@ -452,7 +470,25 @@ export function Conversation({ chat }: { chat: Chat }) {
         </MessageScrollerProvider>
       </div>
 
-      <ChatComposer chat={chat} />
+      {isBlocked ? (
+        <div className="flex items-center justify-between gap-3 border-t border-border bg-muted/50 px-4 py-3">
+          <p className="text-xs text-muted-foreground">
+            Você bloqueou este contato. Não é possível enviar mensagens.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              dispatch({ type: "SET_BLOCKED", chatId: chat.id, value: false })
+            }
+          >
+            Desbloquear
+          </Button>
+        </div>
+      ) : (
+        /* key remounts the composer per conversation so drafts stay isolated */
+        <ChatComposer key={chat.id} chat={chat} />
+      )}
 
       <ContactPanel chat={chat} open={panelOpen} onOpenChange={setPanelOpen} />
       <ConversationSearch

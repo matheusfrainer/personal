@@ -1,6 +1,7 @@
 "use client"
 
 import { messagePreview } from "@/lib/data"
+import { useStore } from "@/lib/store"
 import type { Message as MessageType } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import {
@@ -46,6 +47,7 @@ interface MessageBubbleProps {
   onStar: () => void
   onPin: () => void
   onForward: () => void
+  onEdit: () => void
   onJumpToReply: (id: string) => void
 }
 
@@ -107,8 +109,11 @@ export function MessageBubble({
   onStar,
   onPin,
   onForward,
+  onEdit,
   onJumpToReply,
 }: MessageBubbleProps) {
+  const { state } = useStore()
+  const readReceipts = state.preferences.readReceipts
   const { fromMe } = message
   const align = fromMe ? "end" : "start"
   const sticker = message.type === "sticker" && !message.deleted
@@ -200,7 +205,17 @@ export function MessageBubble({
                 ) : null}
                 {message.edited ? <span className="italic">editada</span> : null}
                 {message.time}
-                {fromMe ? <StatusTicks status={message.status} /> : null}
+                {fromMe ? (
+                  <StatusTicks
+                    // With read receipts off, delivery still shows but the
+                    // blue "read" tick never does — same as the real app.
+                    status={
+                      !readReceipts && message.status === "read"
+                        ? "delivered"
+                        : message.status
+                    }
+                  />
+                ) : null}
               </span>
             </div>
           </BubbleContent>
@@ -236,6 +251,7 @@ export function MessageBubble({
           onPin={onPin}
           onForward={onForward}
           onSelect={onToggleSelect}
+          onEdit={onEdit}
         />
       ) : null}
     </Message>
