@@ -131,7 +131,8 @@ export function ContactPanel({
             <section className="px-5 pb-4">
               <div className="grid grid-cols-3 gap-1.5">
                 {media.slice(0, 6).map((m) =>
-                  m.type === "image" || m.type === "video" ? (
+                  // Only images have a still to show; a video url is not decodable by <img>.
+                  m.type === "image" ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       key={m.id}
@@ -169,14 +170,14 @@ export function ContactPanel({
           {/* Group members */}
           {chat.isGroup && chat.members?.length ? (
             <Collapsible defaultOpen>
-              <CollapsibleTrigger className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-muted">
+              <CollapsibleTrigger className="group flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-muted">
                 <Icon icon={MembersIcon} className="size-4 text-muted-foreground" />
                 <span className="flex-1 text-sm">
                   {chat.members.length} participantes
                 </span>
                 <Icon
                   icon={ChevronDownIcon}
-                  className="size-4 text-muted-foreground transition-transform data-[state=open]:rotate-180"
+                  className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
                 />
               </CollapsibleTrigger>
               <CollapsibleContent>

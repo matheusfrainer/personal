@@ -18,7 +18,8 @@ export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
   const mounted = useHydrated()
 
-  const isDark = resolvedTheme === "dark"
+  // Pre-mount the theme is unknown, so keep server and client markup identical.
+  const isDark = mounted && resolvedTheme === "dark"
 
   return (
     <Tooltip>
@@ -30,7 +31,7 @@ export function ThemeToggle() {
           onClick={() => setTheme(isDark ? "light" : "dark")}
         >
           {/* Render a stable icon before mount to avoid hydration mismatch. */}
-          <Icon icon={mounted && isDark ? SunIcon : MoonIcon} />
+          <Icon icon={isDark ? SunIcon : MoonIcon} />
         </Button>
       </TooltipTrigger>
       <TooltipContent>{isDark ? "Modo claro" : "Modo escuro"}</TooltipContent>

@@ -38,6 +38,7 @@ import { ConversationSearch } from "./conversation-search"
 import { ForwardDialog } from "./forward-dialog"
 import { Icon } from "./icon"
 import {
+  ArchiveIcon,
   BackIcon,
   CloseIcon,
   DeleteIcon,
@@ -142,7 +143,6 @@ function Transcript({
                           ? findMessage(chat, message.replyToId)
                           : undefined
                       }
-                      isGroup={Boolean(chat.isGroup)}
                       selectionMode={selectionMode}
                       selected={state.selectedMessageIds.includes(message.id)}
                       onToggleSelect={() =>
@@ -231,6 +231,11 @@ export function Conversation({ chat }: { chat: Chat }) {
   const selectedIds = state.selectedMessageIds
   const selectionMode = selectedIds.length > 0
   const { start } = useCall()
+  const allSelectedStarred =
+    selectedIds.length > 0 &&
+    allMessages(chat)
+      .filter((m) => selectedIds.includes(m.id))
+      .every((m) => m.starred)
   const startCall = (c: Chat, kind: CallKind) =>
     start({ chatId: c.id, name: c.name, tint: c.tint, kind })
   const isBlocked = state.blocked.includes(chat.id)
@@ -272,6 +277,9 @@ export function Conversation({ chat }: { chat: Chat }) {
                 type: "STAR_MESSAGES",
                 chatId: chat.id,
                 messageIds: selectedIds,
+                // One intent for the whole selection: star unless all are
+                // already starred, instead of flipping each independently.
+                value: !allSelectedStarred,
               })
             }
           >
@@ -411,7 +419,7 @@ export function Conversation({ chat }: { chat: Chat }) {
                     })
                   }
                 >
-                  <Icon icon={ForwardIcon} />
+                  <Icon icon={ArchiveIcon} />
                   Arquivar conversa
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

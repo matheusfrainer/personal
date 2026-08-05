@@ -24,8 +24,19 @@ export function downloadBlob(content: string, type: string, filename: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
+/**
+ * The xref offsets below are byte offsets, but the payload is measured with
+ * String#length (UTF-16 code units), and downloadBlob encodes as UTF-8. Any
+ * non-ASCII byte would desync the two and produce a file readers reject —
+ * and Type1/Helvetica cannot render those glyphs anyway. Folding to ASCII
+ * fixes both at once, which matters in a Portuguese app.
+ */
 function escapePdfText(text: string) {
-  return text.replace(/([\\()])/g, "\\$1")
+  return text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^\x20-\x7E]/g, "?")
+    .replace(/([\\()])/g, "\\$1")
 }
 
 /**

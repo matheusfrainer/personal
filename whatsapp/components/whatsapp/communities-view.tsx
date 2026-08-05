@@ -34,6 +34,8 @@ export function CommunitiesView() {
             <section key={community.id}>
               <button
                 type="button"
+                aria-expanded={open}
+                aria-controls={`community-panel-${community.id}`}
                 onClick={() => setOpenId(open ? null : community.id)}
                 className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-muted"
               >
@@ -56,7 +58,7 @@ export function CommunitiesView() {
               </button>
 
               {open ? (
-                <div className="pb-2">
+                <div id={`community-panel-${community.id}`} className="pb-2">
                   <p className="px-3 pb-2 text-xs text-muted-foreground">
                     {community.description}
                   </p>

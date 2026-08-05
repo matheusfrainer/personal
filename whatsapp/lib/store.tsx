@@ -8,7 +8,7 @@ import {
   communities as seedCommunities,
 } from "./data"
 import { nextId } from "./id"
-import { clearStored, loadState, saveState } from "./storage"
+import { loadState, saveState } from "./storage"
 import type {
   CallEntry,
   Chat,
@@ -71,7 +71,13 @@ export type Action =
   | { type: "SET_TYPING"; chatId: string; typing: boolean }
   | { type: "REACT"; chatId: string; messageId: string; emoji: string }
   | { type: "DELETE_MESSAGES"; chatId: string; messageIds: string[] }
-  | { type: "STAR_MESSAGES"; chatId: string; messageIds: string[] }
+  | {
+      type: "STAR_MESSAGES"
+      chatId: string
+      messageIds: string[]
+      /** explicit target; omit to toggle each message individually */
+      value?: boolean
+    }
   | { type: "PIN_MESSAGE"; chatId: string; messageId: string }
   | { type: "EDIT_MESSAGE"; chatId: string; messageId: string; text: string }
   | { type: "FORWARD"; messages: Message[]; toChatIds: string[]; time: string }
@@ -245,7 +251,9 @@ export function reducer(state: State, action: Action): State {
       return {
         ...updateChat(state, action.chatId, (c) =>
           mapMessages(c, (m) =>
-            action.messageIds.includes(m.id) ? { ...m, starred: !m.starred } : m
+            action.messageIds.includes(m.id)
+              ? { ...m, starred: action.value ?? !m.starred }
+              : m
           )
         ),
         selectedMessageIds: [],
@@ -351,8 +359,9 @@ export function reducer(state: State, action: Action): State {
         selectedId: state.selectedId === action.chatId ? null : state.selectedId,
       }
 
+    // Pure: storage is cleared by the caller, since React may run a reducer
+    // more than once for the same action.
     case "RESET":
-      clearStored()
       return { ...initialState, hydrated: true }
 
     default:
@@ -375,23 +384,44 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   // Persist whenever the domain data changes (never before hydrating, or we'd
   // overwrite stored data with the seed).
-  React.useEffect(() => {
-    if (!state.hydrated) return
-    saveState({
+  const persistable = React.useMemo(
+    () => ({
       chats: state.chats,
       calls: state.calls,
       communities: state.communities,
       blocked: state.blocked,
       preferences: state.preferences,
-    })
-  }, [
-    state.chats,
-    state.calls,
-    state.communities,
-    state.blocked,
-    state.preferences,
-    state.hydrated,
-  ])
+    }),
+    [
+      state.chats,
+      state.calls,
+      state.communities,
+      state.blocked,
+      state.preferences,
+    ]
+  )
+
+  const latest = React.useRef(persistable)
+  React.useEffect(() => {
+    latest.current = persistable
+  }, [persistable])
+
+  // Debounced: SET_DRAFT replaces the chat on every keystroke, so an immediate
+  // write would serialise every conversation as the user types.
+  React.useEffect(() => {
+    if (!state.hydrated) return
+    const handle = window.setTimeout(() => saveState(persistable), 300)
+    return () => window.clearTimeout(handle)
+  }, [persistable, state.hydrated])
+
+  // ...but flush before the page goes away, so debouncing never costs data on
+  // a reload or tab close that lands inside the window.
+  React.useEffect(() => {
+    if (!state.hydrated) return
+    const flush = () => saveState(latest.current)
+    window.addEventListener("pagehide", flush)
+    return () => window.removeEventListener("pagehide", flush)
+  }, [state.hydrated])
 
   const value = React.useMemo(() => ({ state, dispatch }), [state])
 

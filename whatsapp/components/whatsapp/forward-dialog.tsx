@@ -92,6 +92,7 @@ export function ForwardDialog({
                 <button
                   key={chat.id}
                   type="button"
+                  aria-pressed={isPicked}
                   onClick={() =>
                     setPicked((p) =>
                       isPicked ? p.filter((id) => id !== chat.id) : [...p, chat.id]

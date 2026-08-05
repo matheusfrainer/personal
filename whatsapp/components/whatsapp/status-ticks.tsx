@@ -27,7 +27,9 @@ export function StatusTicks({
       icon={status === "sent" ? CheckIcon : CheckDoubleIcon}
       className={cn(
         "size-4",
-        status === "read" ? "text-sky-500 dark:text-sky-400" : className
+        className,
+        // Last so tailwind-merge lets the read colour beat a caller's text colour.
+        status === "read" && "text-sky-500 dark:text-sky-400"
       )}
     />
   )

@@ -6,6 +6,7 @@ import { allMessages, messagePreview } from "@/lib/data"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -145,12 +146,12 @@ export function ChatList() {
             icon={SearchIcon}
             className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
           />
-          <input
+          <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Pesquisar ou começar nova conversa"
             aria-label="Pesquisar conversas"
-            className="h-8 w-full rounded-md border border-input bg-input/20 pr-3 pl-8 text-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 dark:bg-input/30"
+            className="h-8 pr-3 pl-8 text-xs"
           />
         </div>
       </div>

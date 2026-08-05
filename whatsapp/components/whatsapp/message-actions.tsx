@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner"
 
 import type { Message } from "@/lib/types"
 import { Button } from "@/components/ui/button"
@@ -36,7 +37,6 @@ const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"]
 
 interface MessageActionsProps {
   message: Message
-  isGroup: boolean
   onReply: () => void
   onReact: (emoji: string) => void
   onDelete: () => void
@@ -61,9 +61,13 @@ export function MessageActions({
   const [reactOpen, setReactOpen] = React.useState(false)
 
   function copy() {
-    if (message.type === "text") {
-      void navigator.clipboard?.writeText(message.text)
-    }
+    if (message.type !== "text") return
+    // writeText rejects in insecure contexts and when permission is denied;
+    // swallowing it would surface as an unhandled rejection with no feedback.
+    navigator.clipboard
+      ?.writeText(message.text)
+      .then(() => toast("Mensagem copiada"))
+      .catch(() => toast("Não foi possível copiar a mensagem"))
   }
 
   return (

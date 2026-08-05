@@ -25,17 +25,24 @@ export function AudioMessage({
   const [elapsed, setElapsed] = React.useState(0)
   const [speed, setSpeed] = React.useState<1 | 1.5 | 2>(1)
 
+  // Keep the updater pure: React may evaluate it more than once, and calling
+  // setPlaying from inside it would replay the stop behaviour.
+  const elapsedRef = React.useRef(0)
+  React.useEffect(() => {
+    elapsedRef.current = elapsed
+  }, [elapsed])
+
   React.useEffect(() => {
     if (!playing) return
     const id = window.setInterval(() => {
-      setElapsed((e) => {
-        const next = e + 0.1 * speed
-        if (next >= message.duration) {
-          setPlaying(false)
-          return 0
-        }
-        return next
-      })
+      const next = elapsedRef.current + 0.1 * speed
+      if (next >= message.duration) {
+        setPlaying(false)
+        setElapsed(0)
+        return
+      }
+      elapsedRef.current = next
+      setElapsed(next)
     }, 100)
     return () => window.clearInterval(id)
   }, [playing, speed, message.duration])

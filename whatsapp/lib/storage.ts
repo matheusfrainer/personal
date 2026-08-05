@@ -30,8 +30,19 @@ export function loadState(): PersistedState | null {
     if (!raw) return null
     const parsed = JSON.parse(raw) as Partial<PersistedState>
     // Reject anything that isn't the shape we wrote, so an older or corrupt
-    // payload falls back to the seed instead of rendering a broken app.
-    if (!parsed || !Array.isArray(parsed.chats) || !parsed.chats.length) {
+    // payload falls back to the seed instead of rendering a broken app. Each
+    // entry is checked: one malformed chat is enough to crash the renderer.
+    const isChat = (c: unknown): c is PersistedState["chats"][number] =>
+      typeof c === "object" &&
+      c !== null &&
+      typeof (c as { id?: unknown }).id === "string" &&
+      Array.isArray((c as { conversation?: unknown }).conversation)
+    if (
+      !parsed ||
+      !Array.isArray(parsed.chats) ||
+      !parsed.chats.length ||
+      !parsed.chats.every(isChat)
+    ) {
       return null
     }
     return {

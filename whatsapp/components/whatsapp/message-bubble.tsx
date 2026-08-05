@@ -37,7 +37,6 @@ interface MessageBubbleProps {
   showAuthor: boolean
   /** the message this one replies to, already resolved */
   replyTo?: MessageType
-  isGroup: boolean
   selectionMode: boolean
   selected: boolean
   onToggleSelect: () => void
@@ -99,7 +98,6 @@ export function MessageBubble({
   showTail,
   showAuthor,
   replyTo,
-  isGroup,
   selectionMode,
   selected,
   onToggleSelect,
@@ -243,7 +241,6 @@ export function MessageBubble({
       {!selectionMode && !message.deleted ? (
         <MessageActions
           message={message}
-          isGroup={isGroup}
           onReply={onReply}
           onReact={onReact}
           onDelete={onDelete}

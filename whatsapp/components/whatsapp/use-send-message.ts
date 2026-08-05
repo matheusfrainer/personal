@@ -4,6 +4,7 @@ import * as React from "react"
 import { toast } from "sonner"
 
 import { isSimulationDisabled } from "@/lib/e2e"
+import { nextId } from "@/lib/id"
 import { useStore } from "@/lib/store"
 import type { Chat, Message } from "@/lib/types"
 
@@ -17,10 +18,6 @@ const REPLIES = [
   "Fechou 🤝",
 ]
 
-import { nextId } from "@/lib/id"
-
-export { nextId }
-
 export function nowTime() {
   return new Intl.DateTimeFormat("pt-BR", {
     hour: "2-digit",
@@ -29,13 +26,23 @@ export function nowTime() {
 }
 
 /**
- * Sends a message and simulates the other side: delivery receipts tick over,
- * then the contact "types" and answers. Timers are cleared on unmount so a
- * reply never lands after the component is gone.
+ * Pending simulation timers live at module scope on purpose. The composer is
+ * keyed by chat, so tying them to its lifetime cancelled every pending reply
+ * the moment you switched conversations — which also made the cross-chat
+ * notification unreachable. The store outlives every component here, so
+ * dispatching later is safe.
  */
+const pendingTimers = new Set<number>()
+
+if (typeof window !== "undefined") {
+  window.addEventListener("pagehide", () => {
+    pendingTimers.forEach((t) => window.clearTimeout(t))
+    pendingTimers.clear()
+  })
+}
+
 export function useSendMessage(chat: Chat) {
   const { state, dispatch } = useStore()
-  const timers = React.useRef<number[]>([])
   const notify = state.preferences.notifications
 
   // Read the open chat at fire time, not at send time — the user may have
@@ -45,23 +52,12 @@ export function useSendMessage(chat: Chat) {
     selectedIdRef.current = state.selectedId
   }, [state.selectedId])
 
-  React.useEffect(() => {
-    const pending = timers.current
-    return () => {
-      pending.forEach((t) => window.clearTimeout(t))
-      pending.length = 0
-    }
-  }, [])
-
   const later = React.useCallback((fn: () => void, ms: number) => {
-    // Drop the handle once it fires, so a long session doesn't accumulate
-    // dead ids. Spliced in place: the unmount cleanup captured this array.
     const id = window.setTimeout(() => {
-      const at = timers.current.indexOf(id)
-      if (at !== -1) timers.current.splice(at, 1)
+      pendingTimers.delete(id)
       fn()
     }, ms)
-    timers.current.push(id)
+    pendingTimers.add(id)
   }, [])
 
   return React.useCallback(

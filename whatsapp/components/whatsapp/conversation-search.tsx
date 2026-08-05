@@ -45,7 +45,7 @@ export function ConversationSearch({
           {results.map((r) => (
             <CommandItem
               key={r.id}
-              value={`${r.text} ${r.time}`}
+              value={`${r.id} ${r.text} ${r.time}`}
               onSelect={() => {
                 onOpenChange(false)
                 document

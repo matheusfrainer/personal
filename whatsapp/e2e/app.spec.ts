@@ -39,10 +39,57 @@ test("persists messages across a reload", async ({ page }) => {
 })
 
 test("never restores a stuck typing indicator", async ({ page }) => {
-  // Regression: `typing` was persisted, leaving chats stuck on "digitando…".
+  // Regression: `typing` used to be persisted, so reloading mid-simulation left
+  // a chat stuck on "digitando…" forever. Seed storage with the broken shape so
+  // the test actually exercises hydration instead of only reading the seed.
   await page.goto("/?e2e=1")
-  const stored = await page.evaluate(() => window.localStorage.getItem("whatsapp-shadcn:state:v2"))
-  expect(stored ?? "").not.toContain('"typing":true')
+  await page.evaluate(() => {
+    window.localStorage.setItem(
+      "whatsapp-shadcn:state:v2",
+      JSON.stringify({
+        chats: [
+          {
+            id: "stuck",
+            name: "Contato Travado",
+            tint: "neutral",
+            time: "09:00",
+            typing: true,
+            conversation: [
+              {
+                label: "Hoje",
+                messages: [
+                  {
+                    id: "m1",
+                    type: "text",
+                    fromMe: false,
+                    text: "oi",
+                    time: "09:00",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        calls: [],
+        communities: [],
+        blocked: [],
+        preferences: { notifications: true, readReceipts: true },
+      })
+    )
+  })
+  await page.reload()
+
+  // The chat hydrates, but the transient flag must not survive into the UI…
+  await expect(page.getByRole("button", { name: /Contato Travado/ })).toBeVisible()
+  await expect(page.getByText("digitando…")).toHaveCount(0)
+
+  // …nor be written back to storage.
+  await expect(async () => {
+    const stored = await page.evaluate(() =>
+      window.localStorage.getItem("whatsapp-shadcn:state:v2")
+    )
+    expect(stored ?? "").not.toContain('"typing":true')
+  }).toPass({ timeout: 5000 })
 })
 
 test("searches across the whole transcript", async ({ page }) => {

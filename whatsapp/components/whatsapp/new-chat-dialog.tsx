@@ -40,10 +40,14 @@ export function NewChatDialog({
     >
       <CommandInput placeholder="Pesquisar contato ou grupo…" />
       <CommandList>
-        <CommandEmpty>Nenhum contato encontrado.</CommandEmpty>
+        <CommandEmpty>Nenhum contato ou grupo encontrado.</CommandEmpty>
         <CommandGroup heading="Contatos">
           {contacts.map((chat) => (
-            <CommandItem key={chat.id} value={chat.name} onSelect={() => pick(chat.id)}>
+            <CommandItem
+              key={chat.id}
+              value={`${chat.id} ${chat.name}`}
+              onSelect={() => pick(chat.id)}
+            >
               <Avatar size="sm">
                 <AvatarFallback
                   className={cn("text-[0.625rem]", avatarTints[chat.tint])}
@@ -62,7 +66,11 @@ export function NewChatDialog({
         </CommandGroup>
         <CommandGroup heading="Grupos">
           {groups.map((chat) => (
-            <CommandItem key={chat.id} value={chat.name} onSelect={() => pick(chat.id)}>
+            <CommandItem
+              key={chat.id}
+              value={`${chat.id} ${chat.name}`}
+              onSelect={() => pick(chat.id)}
+            >
               <Avatar size="sm">
                 <AvatarFallback
                   className={cn("text-[0.625rem]", avatarTints[chat.tint])}

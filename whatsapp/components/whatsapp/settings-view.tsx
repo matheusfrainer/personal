@@ -1,9 +1,11 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { useTheme } from "next-themes"
 
 import { avatarTints, initials } from "@/lib/data"
+import { clearStored } from "@/lib/storage"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { useHydrated } from "@/hooks/use-hydrated"
@@ -130,7 +132,7 @@ export function SettingsView() {
           description="Conectar um novo aparelho com QR code"
         >
           <Button variant="outline" size="sm" asChild>
-            <a href="/connect">Abrir</a>
+            <Link href="/connect">Abrir</Link>
           </Button>
         </Row>
 
@@ -173,6 +175,7 @@ export function SettingsView() {
                   "Isto apaga as conversas salvas neste navegador e restaura os dados de exemplo. Continuar?"
                 )
               ) {
+                clearStored()
                 dispatch({ type: "RESET" })
               }
             }}

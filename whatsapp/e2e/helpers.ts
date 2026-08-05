@@ -32,7 +32,9 @@ export async function showSidebar(page: Page) {
 /** Switches to one of the primary areas in the nav rail. */
 export async function openArea(page: Page, name: string) {
   await showSidebar(page)
-  await page.getByRole("button", { name, exact: true }).first().click()
+  // The chats control appends the unread count to its accessible name,
+  // so match on the label prefix rather than the whole string.
+  await page.getByRole("button", { name: new RegExp(`^${name}`) }).first().click()
 }
 
 export async function openChat(page: Page, name: string) {

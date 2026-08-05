@@ -114,9 +114,46 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         hangUp()
       }
     }
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
+    // Capture phase: Shell registers its window listener first (it is a child,
+    // so its effect runs earlier), and would otherwise see defaultPrevented as
+    // false and close the conversation behind the call.
+    window.addEventListener("keydown", onKeyDown, true)
+    return () => window.removeEventListener("keydown", onKeyDown, true)
   }, [target, hangUp])
+
+  // Focus management. The overlay claims role="dialog" aria-modal, so it has to
+  // actually hold focus: move it in on open, trap Tab inside, restore on close.
+  const overlayRef = React.useRef<HTMLDivElement>(null)
+  const hangUpRef = React.useRef<HTMLButtonElement>(null)
+
+  React.useEffect(() => {
+    if (!target) return
+    const previous = document.activeElement as HTMLElement | null
+    hangUpRef.current?.focus()
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Tab" || !overlayRef.current) return
+      const focusable = overlayRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.removeEventListener("keydown", onKeyDown)
+      previous?.focus?.()
+    }
+  }, [target])
 
   const value = React.useMemo(() => ({ start }), [start])
 
@@ -125,6 +162,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       {children}
       {target ? (
         <div
+          ref={overlayRef}
           role="dialog"
           aria-modal="true"
           aria-label={`Chamada com ${target.name}`}
@@ -196,6 +234,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
               size="icon-lg"
               variant="destructive"
               className="size-12 rounded-full bg-destructive text-white hover:bg-destructive/90 dark:bg-destructive dark:hover:bg-destructive/90"
+              ref={hangUpRef}
               aria-label="Encerrar chamada"
               onClick={hangUp}
             >

@@ -1,5 +1,7 @@
 "use client"
 
+import type * as React from "react"
+
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
