@@ -1,4 +1,4 @@
-import type { MessageStatus } from "@/lib/data"
+import type { MessageStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 import { Icon } from "./icon"

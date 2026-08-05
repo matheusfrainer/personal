@@ -5,10 +5,9 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 
-const fontSans = Geist({
-  subsets: ["latin"],
-  variable: "--font-sans",
-})
+const geistHeading = Geist({subsets:['latin'],variable:'--font-heading'});
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'})
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
@@ -38,11 +37,9 @@ export default function RootLayout({
       lang="pt-BR"
       suppressHydrationWarning
       className={cn(
-        "antialiased",
-        fontSans.variable,
-        fontMono.variable,
-        "font-sans"
-      )}
+              "antialiased",
+              fontMono.variable
+            , "font-sans", geist.variable, geistHeading.variable)}
     >
       <body>
         <ThemeProvider>{children}</ThemeProvider>
