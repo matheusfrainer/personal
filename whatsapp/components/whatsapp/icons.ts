@@ -1,0 +1,37 @@
+/**
+ * Central place for every Hugeicons glyph used across the WhatsApp UI, aliased
+ * to friendly names so components read clearly.
+ */
+export {
+  Search01Icon as SearchIcon,
+  Cancel01Icon as CloseIcon,
+  MessageAdd01Icon as NewChatIcon,
+  MoreVerticalIcon as MoreIcon,
+  StatusIcon as StatusIcon,
+  UserGroupIcon as CommunitiesIcon,
+  Settings01Icon as SettingsIcon,
+  Archive01Icon as ArchiveIcon,
+  FilterIcon as FilterIcon,
+  Moon02Icon as MoonIcon,
+  Sun03Icon as SunIcon,
+  Call02Icon as PhoneIcon,
+  Video01Icon as VideoIcon,
+  ArrowLeft01Icon as BackIcon,
+  Attachment01Icon as AttachIcon,
+  PlusSignIcon as PlusIcon,
+  SmileIcon as EmojiIcon,
+  Mic01Icon as MicIcon,
+  SentIcon as SendIcon,
+  Tick01Icon as CheckIcon,
+  TickDouble01Icon as CheckDoubleIcon,
+  Clock01Icon as ClockIcon,
+  Camera01Icon as CameraIcon,
+  Image01Icon as ImageIcon,
+  File01Icon as DocumentIcon,
+  UserCircleIcon as ContactIcon,
+  StarIcon as StarIcon,
+  PinIcon as PinIcon,
+  Delete02Icon as DeleteIcon,
+  Copy01Icon as CopyIcon,
+  VolumeOffIcon as MuteIcon,
+} from "@hugeicons/core-free-icons"
