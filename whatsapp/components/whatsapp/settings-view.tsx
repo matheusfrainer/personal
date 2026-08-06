@@ -1,0 +1,190 @@
+"use client"
+
+import * as React from "react"
+import Link from "next/link"
+import { useTheme } from "next-themes"
+
+import { avatarTints, initials } from "@/lib/data"
+import { clearStored } from "@/lib/storage"
+import { useStore } from "@/lib/store"
+import { cn } from "@/lib/utils"
+import { useHydrated } from "@/hooks/use-hydrated"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
+
+import { Icon } from "./icon"
+import {
+  BlockIcon,
+  DeleteIcon,
+  LockIcon,
+  MoonIcon,
+  NotificationIcon,
+  QrCodeIcon,
+  SunIcon,
+} from "./icons"
+
+function Row({
+  icon,
+  title,
+  description,
+  children,
+}: {
+  icon: typeof LockIcon
+  title: string
+  description?: string
+  children?: React.ReactNode
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      <Icon icon={icon} className="size-4 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm">{title}</p>
+        {description ? (
+          <p className="text-xs text-muted-foreground">{description}</p>
+        ) : null}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+export function SettingsView() {
+  const { state, dispatch } = useStore()
+  const { resolvedTheme, setTheme } = useTheme()
+  const { notifications, readReceipts } = state.preferences
+  const blockedChats = state.chats.filter((c) => state.blocked.includes(c.id))
+
+  const mounted = useHydrated()
+  const isDark = mounted && resolvedTheme === "dark"
+
+  return (
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      <header className="flex h-14 items-center px-3">
+        <h1 className="text-base font-semibold">Configurações</h1>
+      </header>
+
+      <div className="thin-scroll min-h-0 flex-1 overflow-y-auto">
+        {/* Profile */}
+        <div className="flex items-center gap-3 px-4 py-4">
+          <Avatar className="size-14">
+            <AvatarFallback
+              className={cn("text-lg font-medium", avatarTints.neutral)}
+            >
+              {initials("Você")}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">Você</p>
+            <p className="truncate text-xs text-muted-foreground">
+              Disponível · +55 11 90000-0000
+            </p>
+          </div>
+        </div>
+
+        <Separator />
+
+        <Row
+          icon={isDark ? SunIcon : MoonIcon}
+          title="Tema escuro"
+          description="Alterna entre claro e escuro (atalho: tecla D)"
+        >
+          <Switch
+            checked={isDark}
+            onCheckedChange={(v) => setTheme(v ? "dark" : "light")}
+          />
+        </Row>
+
+        <Separator />
+
+        <Row
+          icon={NotificationIcon}
+          title="Notificações"
+          description="Avisar quando chegar mensagem em outra conversa"
+        >
+          <Switch
+            checked={notifications}
+            onCheckedChange={(value) =>
+              dispatch({ type: "SET_PREFERENCE", key: "notifications", value })
+            }
+          />
+        </Row>
+
+        <Row
+          icon={LockIcon}
+          title="Confirmações de leitura"
+          description="Se desativado, o tique azul deixa de aparecer"
+        >
+          <Switch
+            checked={readReceipts}
+            onCheckedChange={(value) =>
+              dispatch({ type: "SET_PREFERENCE", key: "readReceipts", value })
+            }
+          />
+        </Row>
+
+        <Separator />
+
+        <Row
+          icon={QrCodeIcon}
+          title="Aparelhos conectados"
+          description="Conectar um novo aparelho com QR code"
+        >
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/connect">Abrir</Link>
+          </Button>
+        </Row>
+
+        <Row
+          icon={BlockIcon}
+          title="Contatos bloqueados"
+          description={
+            blockedChats.length
+              ? blockedChats.map((c) => c.name).join(", ")
+              : "Nenhum"
+          }
+        />
+        {blockedChats.map((c) => (
+          <div
+            key={c.id}
+            className="flex items-center gap-3 py-1 pr-4 pl-11 text-sm"
+          >
+            <span className="flex-1 truncate">{c.name}</span>
+            <Button
+              size="xs"
+              variant="outline"
+              onClick={() =>
+                dispatch({ type: "SET_BLOCKED", chatId: c.id, value: false })
+              }
+            >
+              Desbloquear
+            </Button>
+          </div>
+        ))}
+
+        <Separator />
+
+        <div className="p-3">
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-destructive"
+            onClick={() => {
+              if (
+                window.confirm(
+                  "Isto apaga as conversas salvas neste navegador e restaura os dados de exemplo. Continuar?"
+                )
+              ) {
+                clearStored()
+                dispatch({ type: "RESET" })
+              }
+            }}
+          >
+            <Icon icon={DeleteIcon} />
+            Restaurar dados de exemplo
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
