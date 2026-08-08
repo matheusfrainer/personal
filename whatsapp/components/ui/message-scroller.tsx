@@ -73,10 +73,10 @@ function MessageScrollerItem({
     <MessageScrollerPrimitive.Item
       data-slot="message-scroller-item"
       scrollAnchor={scrollAnchor}
-      className={cn(
-        "min-w-0 shrink-0 [contain-intrinsic-size:auto_10rem] [content-visibility:auto]",
-        className
-      )}
+      // No content-visibility here on purpose: it applies paint containment
+      // unconditionally, which clips anything a message overhangs with — the
+      // reaction pill and the selection highlight both bleed past this box.
+      className={cn("min-w-0 shrink-0", className)}
       {...props}
     />
   )

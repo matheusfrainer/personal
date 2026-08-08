@@ -1,6 +1,12 @@
+import { DEFAULT_MONTHLY_GOAL } from "./types"
 import type { PersistedState } from "./store"
 
-const KEY = "whatsapp-shadcn:state:v2"
+/**
+ * Bumped to v3 with the advisory CRM model. `CrmData` changed shape
+ * incompatibly and is not validated on read, so a v2 payload would hydrate
+ * with the old fields and break the panel rather than fall back to the seed.
+ */
+const KEY = "whatsapp-shadcn:state:v3"
 
 /**
  * Transient UI state must never cross the storage boundary — in either
@@ -17,6 +23,10 @@ function sanitize(state: PersistedState): PersistedState {
       delete copy.typing
       return copy
     }),
+    // Approved-but-unsent actions are re-evaluated on load; a "sent" flag is
+    // history and stays. Nothing pending survives a reload as pending, so a
+    // rule whose trigger no longer holds doesn't fire from a stale queue.
+    pending: (state.pending ?? []).filter((p) => p.status !== "pending"),
   }
 }
 
@@ -51,10 +61,16 @@ export function loadState(): PersistedState | null {
       chats: parsed.chats,
       calls: parsed.calls ?? [],
       communities: parsed.communities ?? [],
+      automations: parsed.automations ?? [],
+      pending: parsed.pending ?? [],
+      campaigns: parsed.campaigns ?? [],
+      monthlyGoal: parsed.monthlyGoal ?? DEFAULT_MONTHLY_GOAL,
+      insights: parsed.insights ?? {},
       blocked: parsed.blocked ?? [],
       preferences: {
         notifications: parsed.preferences?.notifications ?? true,
         readReceipts: parsed.preferences?.readReceipts ?? true,
+        crmPanel: parsed.preferences?.crmPanel ?? true,
       },
     })
   } catch {

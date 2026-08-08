@@ -83,7 +83,9 @@ function BubbleContent({
 }
 
 const bubbleReactionsVariants = cva(
-  "absolute z-10 flex w-fit shrink-0 items-center justify-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-xs ring-2 ring-card has-[button]:p-0",
+  // ring-muted, not ring-card: the transcript sits on .chat-wallpaper, which
+  // paints --muted. Against --card the halo reads as a visible outline in dark.
+  "absolute z-10 flex w-fit shrink-0 items-center justify-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-xs ring-2 ring-muted has-[button]:p-0",
   {
     variants: {
       side: {

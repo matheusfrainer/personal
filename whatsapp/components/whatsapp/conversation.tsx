@@ -2,7 +2,13 @@
 
 import * as React from "react"
 
-import { allMessages, avatarTints, findMessage, initials, messagePreview } from "@/lib/data"
+import {
+  allMessages,
+  avatarTints,
+  findMessage,
+  initials,
+  messagePreview,
+} from "@/lib/data"
 import { useStore } from "@/lib/store"
 import type { CallKind, Chat, Message } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -35,6 +41,7 @@ import { useCall } from "./call-overlay"
 import { ChatComposer } from "./chat-composer"
 import { ContactPanel } from "./contact-panel"
 import { ConversationSearch } from "./conversation-search"
+import { CrmPanelSheet, useWideLayout } from "./crm-panel"
 import { ForwardDialog } from "./forward-dialog"
 import { Icon } from "./icon"
 import {
@@ -48,6 +55,7 @@ import {
   MuteIcon,
   PhoneIcon,
   PinIcon,
+  PipelineIcon,
   SearchIcon,
   StarIcon,
   VideoIcon,
@@ -84,7 +92,10 @@ function Transcript({
   const selectionMode = state.selectedMessageIds.length > 0
 
   return (
-    <MessageScrollerContent className="mx-auto w-full max-w-3xl gap-0 px-2 py-4">
+    // justify-end anchors short transcripts to the bottom. The base class is
+    // `min-h-full flex-col`, which stacks from the top when the content is
+    // shorter than the viewport — and every seeded chat is.
+    <MessageScrollerContent className="w-full justify-end gap-0 px-2 pt-4 pb-8 sm:px-4">
       <Marker variant="separator" className="mb-3">
         <MarkerContent className="mx-auto max-w-md rounded-md bg-muted/80 px-3 py-1.5 text-center text-[0.6875rem] shadow-sm">
           <MarkerIcon className="mr-1 inline-block align-[-2px]">
@@ -106,7 +117,8 @@ function Transcript({
 
             {day.messages.map((message) => {
               const sameAuthor =
-                prev?.fromMe === message.fromMe && prev?.author === message.author
+                prev?.fromMe === message.fromMe &&
+                prev?.author === message.author
               const showTail = !prev || !sameAuthor || message.type === "system"
               const showAuthor = Boolean(
                 showTail && chat.isGroup && !message.fromMe && message.author
@@ -146,7 +158,10 @@ function Transcript({
                       selectionMode={selectionMode}
                       selected={state.selectedMessageIds.includes(message.id)}
                       onToggleSelect={() =>
-                        dispatch({ type: "TOGGLE_SELECT", messageId: message.id })
+                        dispatch({
+                          type: "TOGGLE_SELECT",
+                          messageId: message.id,
+                        })
                       }
                       onReply={() =>
                         dispatch({ type: "SET_REPLY", messageId: message.id })
@@ -184,7 +199,9 @@ function Transcript({
                       onEdit={() =>
                         dispatch({ type: "SET_EDITING", messageId: message.id })
                       }
-                      onJumpToReply={(id) => scrollToMessage(id, { align: "center" })}
+                      onJumpToReply={(id) =>
+                        scrollToMessage(id, { align: "center" })
+                      }
                     />
                   </MessageScrollerItem>
                 </React.Fragment>
@@ -195,7 +212,7 @@ function Transcript({
       })}
 
       {chat.typing ? (
-        <div className="mt-2 flex justify-start px-2">
+        <div className="mt-2 flex shrink-0 justify-start px-2 sm:px-4">
           <div className="flex items-center gap-1 rounded-lg rounded-tl-none border border-border bg-background px-3 py-2 shadow-sm">
             <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
             <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
@@ -211,7 +228,10 @@ export function Conversation({ chat }: { chat: Chat }) {
   const { state, dispatch } = useStore()
   const [panelOpen, setPanelOpen] = React.useState(false)
   const [searchOpen, setSearchOpen] = React.useState(false)
+  const [crmSheetOpen, setCrmSheetOpen] = React.useState(false)
   const [forwarding, setForwarding] = React.useState<Message[] | null>(null)
+  const crmPanelOpen = state.preferences.crmPanel
+  const wide = useWideLayout()
 
   // Snapshot the unread count when the chat opens — selecting it clears the
   // badge, but the divider should stay put while you read.
@@ -326,9 +346,14 @@ export function Conversation({ chat }: { chat: Chat }) {
             </Avatar>
             <span className="min-w-0 flex-1 leading-tight">
               <span className="flex items-center gap-1">
-                <span className="truncate text-sm font-medium">{chat.name}</span>
+                <span className="truncate text-sm font-medium">
+                  {chat.name}
+                </span>
                 {chat.muted ? (
-                  <Icon icon={MuteIcon} className="size-3 text-muted-foreground" />
+                  <Icon
+                    icon={MuteIcon}
+                    className="size-3 text-muted-foreground"
+                  />
                 ) : null}
               </span>
               <span
@@ -382,9 +407,42 @@ export function Conversation({ chat }: { chat: Chat }) {
               </TooltipTrigger>
               <TooltipContent>Pesquisar</TooltipContent>
             </Tooltip>
+            {/* One trigger, two behaviours: wide layouts toggle the docked
+                column through preferences, narrow ones open the sheet — the
+                stored preference must not force a sheet open on mobile. */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Painel do cliente"
+                  aria-pressed={wide ? crmPanelOpen : crmSheetOpen}
+                  onClick={() =>
+                    wide
+                      ? dispatch({
+                          type: "SET_PREFERENCE",
+                          key: "crmPanel",
+                          value: !crmPanelOpen,
+                        })
+                      : setCrmSheetOpen(true)
+                  }
+                >
+                  <Icon icon={PipelineIcon} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {wide && crmPanelOpen
+                  ? "Ocultar painel do cliente"
+                  : "Painel do cliente"}
+              </TooltipContent>
+            </Tooltip>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Menu da conversa">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Menu da conversa"
+                >
                   <Icon icon={MoreIcon} />
                 </Button>
               </DropdownMenuTrigger>
@@ -441,7 +499,10 @@ export function Conversation({ chat }: { chat: Chat }) {
       {/* Pinned message banner */}
       {pinned ? (
         <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-3 py-1.5">
-          <Icon icon={PinIcon} className="size-3.5 shrink-0 text-muted-foreground" />
+          <Icon
+            icon={PinIcon}
+            className="size-3.5 shrink-0 text-muted-foreground"
+          />
           <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
             {messagePreview(pinned)}
           </span>
@@ -464,7 +525,14 @@ export function Conversation({ chat }: { chat: Chat }) {
 
       {/* Transcript */}
       <div className="chat-wallpaper min-h-0 flex-1">
-        <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+        {/* Keyed by chat: the provider only applies defaultScrollPosition once
+            per mount, so a reused instance treats a chat switch as an append
+            and anchors the new transcript at its top. */}
+        <MessageScrollerProvider
+          key={chat.id}
+          autoScroll
+          defaultScrollPosition="end"
+        >
           <MessageScroller>
             <MessageScrollerViewport className="thin-scroll">
               <Transcript
@@ -499,6 +567,13 @@ export function Conversation({ chat }: { chat: Chat }) {
       )}
 
       <ContactPanel chat={chat} open={panelOpen} onOpenChange={setPanelOpen} />
+      {wide ? null : (
+        <CrmPanelSheet
+          chat={chat}
+          open={crmSheetOpen}
+          onOpenChange={setCrmSheetOpen}
+        />
+      )}
       <ConversationSearch
         chat={chat}
         open={searchOpen}

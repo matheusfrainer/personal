@@ -1,6 +1,7 @@
 import { placeholderPhoto, waveform } from "./media"
 import { stripFormatting } from "./format"
 import type {
+  AutomationRule,
   AvatarTint,
   CallEntry,
   Chat,
@@ -46,6 +47,18 @@ export function findMessage(chat: Chat, id: string): Message | undefined {
   return allMessages(chat).find((m) => m.id === id)
 }
 
+/**
+ * Places a message at its chronological slot within a day. `time` is always a
+ * zero-padded "HH:MM", so a plain string compare orders a day correctly.
+ * Scanning from the end keeps the common case (newest message) O(1) and puts
+ * ties after their peers, preserving arrival order inside the same minute.
+ */
+export function insertByTime(messages: Message[], message: Message): Message[] {
+  let i = messages.length
+  while (i > 0 && messages[i - 1].time > message.time) i--
+  return [...messages.slice(0, i), message, ...messages.slice(i)]
+}
+
 /** One-line summary of any message type, for previews and reply blocks. */
 export function messagePreview(message: Message): string {
   if (message.deleted) return "Esta mensagem foi apagada"
@@ -84,6 +97,83 @@ export const chats: Chat[] = [
     unread: 2,
     pinned: true,
     favourite: true,
+    crm: {
+      stage: "proposta",
+      relationship: "lead",
+      tags: ["Alta renda", "Indicação", "Prioridade"],
+      owner: "Você",
+      email: "ana.beatriz@estudio.com.br",
+      company: "Estúdio Nove",
+      positions: [
+        {
+          id: "ana-p1",
+          institution: "Itaú",
+          amount: 420000,
+          product: "CDB",
+          underManagement: false,
+          note: "Vence em março; ela quer comparar taxas antes de renovar.",
+        },
+        {
+          id: "ana-p2",
+          institution: "XP",
+          amount: 180000,
+          product: "Fundo multimercado",
+          underManagement: false,
+        },
+        {
+          id: "ana-p3",
+          institution: "Nossa casa",
+          amount: 60000,
+          product: "Tesouro Selic",
+          underManagement: true,
+          note: "Primeiro aporte, feito como teste.",
+        },
+      ],
+      profile: {
+        birthDate: "1988-08-14",
+        profession: "Designer de produto",
+        riskProfile: "moderado",
+        suitabilityDate: "2024-09-02",
+        horizon: "medio",
+        monthlyContribution: 4000,
+        objectives: ["Aposentadoria", "Reserva de emergência"],
+        restrictions: ["Não quer cripto"],
+        liquidityNeed: "Precisa de 6 meses de reserva acessível",
+        experience: "intermediario",
+        dependents: 0,
+      },
+      notes:
+        "Prefere reuniões pela manhã. Decide rápido quando vê comparativo.",
+      meetings: [
+        {
+          id: "ana-m1",
+          date: "2026-07-22",
+          title: "Diagnóstico inicial",
+          summary:
+            "Mapeamos o que ela tem no Itaú e na XP. Incomodada com a taxa do fundo.",
+          actionItems: [
+            "Montar comparativo de CDB",
+            "Simular portabilidade do fundo",
+          ],
+        },
+      ],
+    },
+    automations: [
+      {
+        id: "ana-followup",
+        name: "Follow-up de proposta",
+        description: "Cobra retorno se a proposta ficar 48h sem resposta.",
+        trigger: "sem-resposta",
+        config: { days: 2 },
+        message:
+          "Oi {primeiro_nome}, conseguiu olhar o comparativo que te mandei?",
+        sendAt: "09:00",
+        scope: "local",
+        chatId: "ana",
+        enabled: true,
+        lastRun: "Ontem, 18:30",
+      },
+    ],
     conversation: [
       {
         label: "Ontem",
@@ -164,6 +254,16 @@ export const chats: Chat[] = [
     unread: 5,
     pinned: true,
     typing: true,
+    crm: {
+      stage: "novo",
+      relationship: "lead",
+      tags: ["Interno"],
+      positions: [],
+      profile: { objectives: [], restrictions: [] },
+      notes: "Grupo interno do escritório — sem tratativa comercial.",
+      meetings: [],
+    },
+    automations: [],
     conversation: [
       {
         label: "Hoje",
@@ -235,6 +335,40 @@ export const chats: Chat[] = [
     phone: "+55 11 97654-3210",
     about: "Disponível",
     time: "08:10",
+    crm: {
+      stage: "reuniao",
+      relationship: "lead",
+      tags: ["Inbound", "SP", "Renda fixa"],
+      owner: "Você",
+      email: "carlos.eduardo@vertice.com",
+      company: "Vértice Consultoria",
+      positions: [
+        {
+          id: "carlos-p1",
+          institution: "Banco do Brasil",
+          amount: 320000,
+          product: "Poupança",
+          underManagement: false,
+          note: "Parado há dois anos. Principal argumento da conversa.",
+        },
+      ],
+      profile: {
+        birthDate: "1975-03-09",
+        profession: "Sócio de consultoria",
+        riskProfile: "conservador",
+        suitabilityDate: "2024-05-18",
+        horizon: "longo",
+        monthlyContribution: 8000,
+        objectives: ["Aposentadoria", "Sucessão"],
+        restrictions: ["Não quer renda variável"],
+        liquidityNeed: "Sem necessidade de resgate no curto prazo",
+        experience: "iniciante",
+        dependents: 2,
+      },
+      notes: "Chegou por indicação da Ana. Precisa de didática, não de jargão.",
+      meetings: [],
+    },
+    automations: [],
     conversation: [
       {
         label: "Hoje",
@@ -276,6 +410,15 @@ export const chats: Chat[] = [
     time: "Ontem",
     unread: 12,
     muted: true,
+    crm: {
+      stage: "novo",
+      relationship: "lead",
+      tags: ["Pessoal"],
+      positions: [],
+      profile: { objectives: [], restrictions: [] },
+      meetings: [],
+    },
+    automations: [],
     conversation: [
       {
         label: "Ontem",
@@ -338,6 +481,63 @@ export const chats: Chat[] = [
     about: "Ocupada",
     time: "Ontem",
     draft: "Depois te mando os arquivos",
+    crm: {
+      stage: "abertura",
+      relationship: "cliente",
+      clientSince: "2025-11-10",
+      tags: ["Cliente", "Alta renda", "RJ", "Previdência"],
+      owner: "Você",
+      email: "mariana@costaeassociados.com.br",
+      company: "Costa & Associados",
+      positions: [
+        {
+          id: "mariana-p1",
+          institution: "Nossa casa",
+          amount: 1150000,
+          product: "Carteira diversificada",
+          underManagement: true,
+        },
+        {
+          id: "mariana-p2",
+          institution: "Bradesco",
+          amount: 380000,
+          product: "Previdência",
+          underManagement: false,
+          note: "PGBL antigo, taxa alta. Portabilidade em estudo.",
+        },
+      ],
+      profile: {
+        birthDate: "1980-12-02",
+        profession: "Advogada sócia",
+        riskProfile: "arrojado",
+        suitabilityDate: "2025-11-10",
+        horizon: "longo",
+        monthlyContribution: 25000,
+        objectives: ["Crescimento de patrimônio", "Sucessão", "Imóvel"],
+        restrictions: ["Evitar exposição cambial acima de 15%"],
+        liquidityNeed: "Mantém 200 mil líquidos para oportunidades",
+        experience: "experiente",
+        dependents: 1,
+        npsDate: "2026-01-15",
+        npsScore: 9,
+      },
+      notes:
+        "Decide rápido e cobra dados. Não gosta de ser lembrada mais de uma vez.",
+      meetings: [
+        {
+          id: "mariana-m1",
+          date: "2026-06-30",
+          title: "Revisão semestral",
+          summary:
+            "Carteira acima do CDI no semestre. Discutimos portabilidade da previdência do Bradesco.",
+          actionItems: [
+            "Levantar custo de saída do PGBL",
+            "Simular cenário com 15% em câmbio",
+          ],
+        },
+      ],
+    },
+    automations: [],
     conversation: [
       {
         label: "Ontem",
@@ -375,6 +575,28 @@ export const chats: Chat[] = [
     presence: "visto por último hoje às 07:32",
     phone: "+55 11 96543-2109",
     time: "Ontem",
+    crm: {
+      stage: "contato",
+      relationship: "lead",
+      tags: ["Indicação"],
+      owner: "Você",
+      company: "Autônomo",
+      positions: [],
+      declaredNetWorth: 90000,
+      profile: {
+        birthDate: "1995-05-27",
+        profession: "Desenvolvedor",
+        horizon: "longo",
+        monthlyContribution: 1500,
+        objectives: ["Primeiro investimento"],
+        restrictions: [],
+        experience: "iniciante",
+      },
+      notes:
+        "Primeiro contato, ainda sem suitability. Declarou 90 mil na conta corrente.",
+      meetings: [],
+    },
+    automations: [],
     conversation: [
       {
         label: "Ontem",
@@ -417,6 +639,15 @@ export const chats: Chat[] = [
     about: "Turma de 2026",
     time: "Ter",
     muted: true,
+    crm: {
+      stage: "novo",
+      relationship: "lead",
+      tags: ["Pessoal", "Estudos"],
+      positions: [],
+      profile: { objectives: [], restrictions: [] },
+      meetings: [],
+    },
+    automations: [],
     conversation: [
       {
         label: "Terça-feira",
@@ -456,6 +687,18 @@ export const chats: Chat[] = [
     tint: "neutral",
     presence: "geralmente responde na hora",
     time: "Seg",
+    crm: {
+      stage: "novo",
+      relationship: "lead",
+      tags: ["Fornecedor"],
+      email: "atendimento@suporte.com.br",
+      company: "Suporte Técnico Ltda.",
+      positions: [],
+      profile: { objectives: [], restrictions: [] },
+      notes: "Canal do fornecedor de infraestrutura — não é lead comercial.",
+      meetings: [],
+    },
+    automations: [],
     conversation: [
       {
         label: "Segunda-feira",
@@ -487,6 +730,16 @@ export const chats: Chat[] = [
     members: ["Você", "Paula", "Ricardo", "+7"],
     time: "12/07",
     archived: true,
+    crm: {
+      stage: "novo",
+      relationship: "perdido",
+      tags: ["Arquivado"],
+      positions: [],
+      profile: { objectives: [], restrictions: [] },
+      notes: "Grupo encerrado em julho.",
+      meetings: [],
+    },
+    automations: [],
     conversation: [
       {
         label: "12 de julho",
@@ -511,6 +764,17 @@ export const chats: Chat[] = [
     time: "08/07",
     archived: true,
     muted: true,
+    crm: {
+      stage: "novo",
+      relationship: "perdido",
+      tags: ["Marketing"],
+      company: "Loja X",
+      positions: [],
+      profile: { objectives: [], restrictions: [] },
+      notes: "Conta comercial de varejo — sem relação de assessoria.",
+      meetings: [],
+    },
+    automations: [],
     conversation: [
       {
         label: "8 de julho",
@@ -525,6 +789,74 @@ export const chats: Chat[] = [
         ],
       },
     ],
+  },
+]
+
+/**
+ * The shared automation library. These apply to every contact unless a chat
+ * opts out through `automationOverrides`; `enabled` here is the default a new
+ * contact inherits, not a global on/off switch.
+ */
+export const automations: AutomationRule[] = [
+  {
+    id: "global-aniversario",
+    name: "Parabéns de aniversário",
+    description: "Mensagem no dia do aniversário do contato.",
+    trigger: "aniversario",
+    config: {},
+    message:
+      "Parabéns, {primeiro_nome}! Que o ano novo venha com boas decisões — e bons rendimentos. 🎉",
+    sendAt: "09:00",
+    scope: "global",
+    enabled: true,
+  },
+  {
+    id: "global-nps",
+    name: "Pesquisa de satisfação",
+    description: "Pede NPS quando passam 6 meses da última pesquisa.",
+    trigger: "nps",
+    config: { days: 180 },
+    message:
+      "{primeiro_nome}, de 0 a 10, quanto você recomendaria meu trabalho? Sua resposta me ajuda a ajustar o que faço por você.",
+    sendAt: "15:00",
+    scope: "global",
+    enabled: true,
+  },
+  {
+    id: "global-suitability",
+    name: "Renovação de suitability",
+    description: "Avisa 30 dias antes do perfil de investidor vencer.",
+    trigger: "suitability",
+    config: { days: 30 },
+    message:
+      "{primeiro_nome}, seu perfil de investidor vence em breve. Consigo renovar em cinco minutos — quando fica bom pra você?",
+    sendAt: "10:00",
+    scope: "global",
+    enabled: true,
+  },
+  {
+    id: "global-followup",
+    name: "Follow-up de 3 dias",
+    description: "Retoma quando sua última mensagem fica sem resposta.",
+    trigger: "sem-resposta",
+    config: { days: 3 },
+    message:
+      "Oi {primeiro_nome}, só retomando o que conversamos. Ficou alguma dúvida?",
+    sendAt: "11:00",
+    scope: "global",
+    enabled: false,
+  },
+  {
+    id: "global-reativacao",
+    name: "Reativação",
+    description: "Aciona contatos sem interação há 45 dias.",
+    trigger: "sem-contato",
+    config: { days: 45 },
+    message:
+      "{primeiro_nome}, faz um tempo que não conversamos. Quer que eu faça uma revisão da sua carteira?",
+    sendAt: "16:00",
+    scope: "global",
+    enabled: false,
   },
 ]
 

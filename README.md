@@ -6,4 +6,4 @@ My personal repository.
 
 - [`whatsapp/`](./whatsapp) — clone da interface do WhatsApp Web construído
   inteiramente com **shadcn/ui** (estilo Mira, tema Neutro, fonte Geist, radius
-  Small) em Next.js + Tailwind CSS v4. Veja o [README do projeto](./whatsapp/README.md).
+  Small) em Next.js + Tailwind CSS v4.

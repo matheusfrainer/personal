@@ -7,6 +7,7 @@ import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +44,33 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: "groups", label: "Grupos" },
 ]
 
+/**
+ * Placeholder rows that mirror ChatListItem's box model exactly — same
+ * padding, same avatar size, same two text lines at 20px and 16px — so the
+ * list doesn't shift by a pixel when the real rows replace them. The bars sit
+ * inside fixed-height lines rather than setting the height themselves, which
+ * keeps them visually thin without changing the geometry.
+ */
+function ChatListSkeleton() {
+  return (
+    <div aria-hidden="true">
+      {Array.from({ length: 8 }, (_, i) => (
+        <div key={i} className="flex w-full items-center gap-3 px-3 py-2.5">
+          <Skeleton className="size-10 shrink-0 rounded-full" />
+          <div className="-my-0.5 min-w-0 flex-1 pb-2.5">
+            <div className="flex h-5 items-center">
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <div className="mt-0.5 flex h-4 items-center">
+              <Skeleton className="h-2.5 w-48" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function ChatList() {
   const { state, dispatch } = useStore()
   const [query, setQuery] = React.useState("")
@@ -54,20 +82,28 @@ export function ChatList() {
 
   const visible = React.useMemo(() => {
     const q = query.trim().toLowerCase()
-    return state.chats
-      .filter((chat) => {
-        if (Boolean(chat.archived) !== showArchived) return false
-        if (filter === "unread" && !(chat.unread ?? 0)) return false
-        if (filter === "favourites" && !chat.favourite) return false
-        if (filter === "groups" && !chat.isGroup) return false
-        if (!q) return true
-        if (chat.name.toLowerCase().includes(q)) return true
-        // Search the whole transcript, not just the last message.
-        return allMessages(chat).some((m) =>
-          messagePreview(m).toLowerCase().includes(q)
+    return (
+      state.chats
+        .filter((chat) => {
+          if (Boolean(chat.archived) !== showArchived) return false
+          if (filter === "unread" && !(chat.unread ?? 0)) return false
+          if (filter === "favourites" && !chat.favourite) return false
+          if (filter === "groups" && !chat.isGroup) return false
+          if (!q) return true
+          if (chat.name.toLowerCase().includes(q)) return true
+          // Search the whole transcript, not just the last message.
+          return allMessages(chat).some((m) =>
+            messagePreview(m).toLowerCase().includes(q)
+          )
+        })
+        // Pinned first, then most recent activity. Seeded chats have no
+        // `updatedAt`, so they keep the authored order until they see traffic.
+        .sort(
+          (a, b) =>
+            Number(!!b.pinned) - Number(!!a.pinned) ||
+            (b.updatedAt ?? 0) - (a.updatedAt ?? 0)
         )
-      })
-      .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned))
+    )
   }, [state.chats, query, filter, showArchived])
 
   return (
@@ -79,7 +115,9 @@ export function ChatList() {
               variant="ghost"
               size="icon"
               aria-label="Voltar"
-              onClick={() => dispatch({ type: "SET_SHOW_ARCHIVED", value: false })}
+              onClick={() =>
+                dispatch({ type: "SET_SHOW_ARCHIVED", value: false })
+              }
             >
               <Icon icon={BackIcon} className="size-5" />
             </Button>
@@ -128,7 +166,9 @@ export function ChatList() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onSelect={() => dispatch({ type: "SET_VIEW", view: "settings" })}
+                    onSelect={() =>
+                      dispatch({ type: "SET_VIEW", view: "settings" })
+                    }
                   >
                     <Icon icon={SettingsIcon} />
                     Configurações
@@ -195,7 +235,13 @@ export function ChatList() {
       ) : null}
 
       <div className="thin-scroll min-h-0 flex-1 overflow-y-auto">
-        {visible.length === 0 ? (
+        {/* The page is prerendered from the seed, then the store swaps in
+            whatever localStorage holds. Painting the seed list first makes the
+            rows visibly reorder and badges pop when hydration lands, so hold a
+            skeleton until the real state is in. */}
+        {!state.hydrated ? (
+          <ChatListSkeleton />
+        ) : visible.length === 0 ? (
           <p className="px-4 py-10 text-center text-xs text-muted-foreground">
             Nenhuma conversa encontrada.
           </p>
@@ -205,7 +251,9 @@ export function ChatList() {
               key={chat.id}
               chat={chat}
               selected={chat.id === state.selectedId}
-              onSelect={() => dispatch({ type: "SELECT_CHAT", chatId: chat.id })}
+              onSelect={() =>
+                dispatch({ type: "SELECT_CHAT", chatId: chat.id })
+              }
             />
           ))
         )}
