@@ -21,12 +21,14 @@ test("keeps drafts isolated per conversation", async ({ page }) => {
   await page.waitForTimeout(600)
 
   await openChat(page, "Carlos Eduardo")
-  await expect(page.getByRole("textbox", { name: "Digite uma mensagem" })).toHaveValue("")
+  await expect(
+    page.getByRole("textbox", { name: "Digite uma mensagem" })
+  ).toHaveValue("")
 
   await openChat(page, "Ana Beatriz")
-  await expect(page.getByRole("textbox", { name: "Digite uma mensagem" })).toHaveValue(
-    "rascunho da Ana"
-  )
+  await expect(
+    page.getByRole("textbox", { name: "Digite uma mensagem" })
+  ).toHaveValue("rascunho da Ana")
 })
 
 test("persists messages across a reload", async ({ page }) => {
@@ -35,7 +37,9 @@ test("persists messages across a reload", async ({ page }) => {
 
   await page.reload()
   await openChat(page, "Ana Beatriz")
-  await expect(conversation(page).getByText("sobrevive ao reload")).toBeVisible()
+  await expect(
+    conversation(page).getByText("sobrevive ao reload")
+  ).toBeVisible()
 })
 
 test("never restores a stuck typing indicator", async ({ page }) => {
@@ -57,7 +61,13 @@ test("never restores a stuck typing indicator", async ({ page }) => {
           {
             label: "Hoje",
             messages: [
-              { id: "m1", type: "text", fromMe: false, text: "oi", time: "09:00" },
+              {
+                id: "m1",
+                type: "text",
+                fromMe: false,
+                text: "oi",
+                time: "09:00",
+              },
             ],
           },
         ],
@@ -69,18 +79,20 @@ test("never restores a stuck typing indicator", async ({ page }) => {
     preferences: { notifications: true, readReceipts: true },
   })
   await page.addInitScript((payload) => {
-    window.localStorage.setItem("whatsapp-shadcn:state:v2", payload as string)
+    window.localStorage.setItem("whatsapp-shadcn:state:v3", payload as string)
   }, stuck)
   await page.goto("/?e2e=1")
 
   // The chat hydrates, but the transient flag must not survive into the UI…
-  await expect(page.getByRole("button", { name: /Contato Travado/ })).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: /Contato Travado/ })
+  ).toBeVisible()
   await expect(page.getByText("digitando…")).toHaveCount(0)
 
   // …nor be written back to storage.
   await expect(async () => {
     const stored = await page.evaluate(() =>
-      window.localStorage.getItem("whatsapp-shadcn:state:v2")
+      window.localStorage.getItem("whatsapp-shadcn:state:v3")
     )
     expect(stored ?? "").not.toContain('"typing":true')
   }).toPass({ timeout: 5000 })
@@ -96,9 +108,13 @@ test("searches across the whole transcript", async ({ page }) => {
   await expect(page.getByText("Nenhuma conversa encontrada.")).toBeVisible()
 })
 
-test("runs a simulated call and records it in the history", async ({ page }) => {
+test("runs a simulated call and records it in the history", async ({
+  page,
+}) => {
   await openChat(page, "Ana Beatriz")
-  await conversation(page).getByRole("button", { name: "Chamada de voz" }).click()
+  await conversation(page)
+    .getByRole("button", { name: "Chamada de voz" })
+    .click()
 
   const dialog = page.getByRole("dialog", { name: /Chamada com Ana Beatriz/ })
   await expect(dialog).toBeVisible()
@@ -115,17 +131,23 @@ test("runs a simulated call and records it in the history", async ({ page }) => 
 
 test("blocking a contact disables the composer", async ({ page }) => {
   await openChat(page, "Carlos Eduardo")
-  await conversation(page).getByRole("button", { name: /Carlos Eduardo/ }).click()
+  await conversation(page)
+    .getByRole("button", { name: /Carlos Eduardo/ })
+    .click()
   await page.getByRole("button", { name: /^Bloquear/ }).click()
   // Close the info panel: while a Radix sheet is open the rest of the page is
   // aria-hidden, so role-based queries can't reach the composer behind it.
   await page.keyboard.press("Escape")
 
   await expect(
-    page.getByText("Você bloqueou este contato. Não é possível enviar mensagens.")
+    page.getByText(
+      "Você bloqueou este contato. Não é possível enviar mensagens."
+    )
   ).toBeVisible()
   await page.getByRole("button", { name: "Desbloquear" }).click()
-  await expect(page.getByRole("textbox", { name: "Digite uma mensagem" })).toBeVisible()
+  await expect(
+    page.getByRole("textbox", { name: "Digite uma mensagem" })
+  ).toBeVisible()
 })
 
 test("read-receipt preference hides the blue tick", async ({ page }) => {
@@ -150,7 +172,9 @@ test("navigates between the primary areas", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Comunidades" })).toBeVisible()
 
   await openArea(page, "Configurações")
-  await expect(page.getByRole("heading", { name: "Configurações" })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Configurações" })
+  ).toBeVisible()
 
   await openArea(page, "Conversas")
   await expect(page.getByRole("heading", { name: "Conversas" })).toBeVisible()
@@ -161,7 +185,9 @@ test("deleting a chat also drops its call history", async ({ page }) => {
   await expect(page.getByText("Mariana Costa")).toBeVisible()
 
   await openArea(page, "Conversas")
-  await page.getByRole("button", { name: /Mariana Costa/ }).click({ button: "right" })
+  await page
+    .getByRole("button", { name: /Mariana Costa/ })
+    .click({ button: "right" })
   await page.getByRole("menuitem", { name: "Apagar conversa" }).click()
 
   await openArea(page, "Chamadas")
@@ -173,5 +199,7 @@ test("sends media from the attach menu", async ({ page }) => {
   await page.getByRole("button", { name: "Anexar" }).click()
   await page.getByRole("menuitem", { name: "Documento" }).click()
 
-  await expect(conversation(page).getByText("documento.pdf").last()).toBeVisible()
+  await expect(
+    conversation(page).getByText("documento.pdf").last()
+  ).toBeVisible()
 })

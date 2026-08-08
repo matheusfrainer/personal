@@ -12,14 +12,39 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+import { Separator } from "@/components/ui/separator"
+
 import { Icon } from "./icon"
-import { ChatsIcon, CommunitiesIcon, PhoneIcon, SettingsIcon } from "./icons"
+import {
+  AgendaIcon,
+  AutomationIcon,
+  ChatsIcon,
+  CommunitiesIcon,
+  PhoneIcon,
+  PipelineIcon,
+  SettingsIcon,
+  WalletIcon,
+} from "./icons"
 import { ThemeToggle } from "./theme-toggle"
 
-const PRIMARY: { view: View; label: string; icon: typeof ChatsIcon }[] = [
+type Entry = { view: View; label: string; icon: typeof ChatsIcon }
+
+const PRIMARY: Entry[] = [
   { view: "chats", label: "Conversas", icon: ChatsIcon },
   { view: "calls", label: "Chamadas", icon: PhoneIcon },
   { view: "communities", label: "Comunidades", icon: CommunitiesIcon },
+]
+
+/**
+ * The advisory side of the app. Four entries rather than one per screen: the
+ * rail is 56px wide, and ten icons would read as a toolbar. Each of these
+ * opens a full-width workspace that tabs into its own sub-screens.
+ */
+const WORKSPACES: Entry[] = [
+  { view: "funil", label: "Funil", icon: PipelineIcon },
+  { view: "carteiras", label: "Carteiras", icon: WalletIcon },
+  { view: "agenda", label: "Agenda", icon: AgendaIcon },
+  { view: "automacoes", label: "Automações", icon: AutomationIcon },
 ]
 
 /**
@@ -28,52 +53,67 @@ const PRIMARY: { view: View; label: string; icon: typeof ChatsIcon }[] = [
  */
 export function NavRail() {
   const { state, dispatch } = useStore()
+  // No `hydrated` guard needed: before hydration the store holds no chats and
+  // no pending actions, so both counts are 0 and neither badge renders.
   const unreadTotal = state.chats.reduce((n, c) => n + (c.unread ?? 0), 0)
+  const toReview = state.pending.filter((p) => p.status === "pending").length
+
+  function railButton(entry: Entry, badge?: number) {
+    const active = state.view === entry.view
+    return (
+      <Tooltip key={entry.view}>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-lg"
+            aria-label={
+              badge ? `${entry.label}, ${badge} pendentes` : entry.label
+            }
+            aria-current={active ? "page" : undefined}
+            onClick={() => dispatch({ type: "SET_VIEW", view: entry.view })}
+            className={cn(
+              "relative rounded-full",
+              active && "bg-muted text-foreground"
+            )}
+          >
+            <Icon
+              icon={entry.icon}
+              className="size-5"
+              strokeWidth={active ? 2.2 : 1.8}
+            />
+            {badge ? (
+              <span
+                aria-hidden="true"
+                className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[0.5625rem] font-semibold text-primary-foreground"
+              >
+                {badge > 99 ? "99+" : badge}
+              </span>
+            ) : null}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">{entry.label}</TooltipContent>
+      </Tooltip>
+    )
+  }
 
   return (
     <nav
       aria-label="Navegação principal"
       className="flex h-full w-14 shrink-0 flex-col items-center gap-1 border-r border-border bg-muted/40 py-3"
     >
-      {PRIMARY.map((entry) => {
-        const active = state.view === entry.view
-        return (
-          <Tooltip key={entry.view}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-lg"
-                aria-label={
-                  entry.view === "chats" && unreadTotal > 0
-                    ? `${entry.label}, ${unreadTotal} não lidas`
-                    : entry.label
-                }
-                aria-current={active ? "page" : undefined}
-                onClick={() => dispatch({ type: "SET_VIEW", view: entry.view })}
-                className={cn(
-                  "relative rounded-full",
-                  active && "bg-muted text-foreground"
-                )}
-              >
-                <Icon
-                  icon={entry.icon}
-                  className="size-5"
-                  strokeWidth={active ? 2.2 : 1.8}
-                />
-                {entry.view === "chats" && unreadTotal > 0 ? (
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[0.5625rem] font-semibold text-primary-foreground"
-                  >
-                    {unreadTotal > 99 ? "99+" : unreadTotal}
-                  </span>
-                ) : null}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">{entry.label}</TooltipContent>
-          </Tooltip>
-        )
-      })}
+      {PRIMARY.map((entry) =>
+        railButton(entry, entry.view === "chats" ? unreadTotal : undefined)
+      )}
+
+      <Separator className="my-1 w-6" />
+
+      {/* Advisory workspaces. Scrolls on short viewports so the footer
+          controls stay reachable rather than being pushed off-screen. */}
+      <div className="thin-scroll flex min-h-0 flex-col items-center gap-1 overflow-y-auto">
+        {WORKSPACES.map((entry) =>
+          railButton(entry, entry.view === "agenda" ? toReview : undefined)
+        )}
+      </div>
 
       <div className="flex-1" />
 

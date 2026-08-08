@@ -3,7 +3,9 @@
 import * as React from "react"
 
 import { StoreProvider, useStore } from "@/lib/store"
+import { isWorkspaceView, type View } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { useAutomationScheduler } from "@/hooks/use-automation-scheduler"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
@@ -12,9 +14,14 @@ import { CallsView } from "./calls-view"
 import { ChatList } from "./chat-list"
 import { CommunitiesView } from "./communities-view"
 import { Conversation } from "./conversation"
+import { CrmPanel, useWideLayout } from "./crm-panel"
 import { EmptyConversation } from "./empty-conversation"
 import { SettingsView } from "./settings-view"
 import { NavRail } from "./nav-rail"
+import { AgendaView } from "./views/agenda-view"
+import { AutomacoesView } from "./views/automacoes-view"
+import { CarteirasView } from "./views/carteiras-view"
+import { FunilView } from "./views/funil-view"
 
 /** Keeps the tab title in sync with the unread count, like WhatsApp Web. */
 function useUnreadTitle() {
@@ -32,6 +39,7 @@ function Shell() {
     state.chats.find((c) => c.id === state.selectedId) ?? null
 
   useUnreadTitle()
+  useAutomationScheduler()
 
   // Global shortcuts. Ignored while typing so they never eat input.
   React.useEffect(() => {
@@ -51,6 +59,10 @@ function Shell() {
       if (e.key === "Escape") {
         if (state.selectedMessageIds.length) {
           dispatch({ type: "CLEAR_SELECTION" })
+        } else if (isWorkspaceView(state.view)) {
+          // In a workspace there is no conversation to close, so Escape is
+          // the way back to the chats instead of a no-op.
+          dispatch({ type: "SET_VIEW", view: "chats" })
         } else if (state.selectedId) {
           dispatch({ type: "SELECT_CHAT", chatId: null })
         }
@@ -58,21 +70,35 @@ function Shell() {
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [dispatch, state.selectedId, state.selectedMessageIds.length])
+  }, [dispatch, state.selectedId, state.selectedMessageIds.length, state.view])
 
-  const sidebar =
-    state.view === "chats" ? (
-      <ChatList />
-    ) : state.view === "calls" ? (
-      <CallsView />
-    ) : state.view === "communities" ? (
-      <CommunitiesView />
-    ) : (
-      <SettingsView />
-    )
+  // A record rather than a ternary chain: adding a view to the union without
+  // a screen is now a type error instead of silently rendering Settings.
+  const SCREENS: Record<View, React.ReactNode> = {
+    chats: <ChatList />,
+    calls: <CallsView />,
+    communities: <CommunitiesView />,
+    settings: <SettingsView />,
+    funil: <FunilView />,
+    carteiras: <CarteirasView />,
+    agenda: <AgendaView />,
+    automacoes: <AutomacoesView />,
+  }
 
+  const workspace = isWorkspaceView(state.view)
   // On mobile the conversation replaces the list entirely.
-  const conversationOpen = Boolean(selectedChat) && state.view === "chats"
+  const conversationOpen =
+    Boolean(selectedChat) && state.view === "chats" && !workspace
+  const wide = useWideLayout()
+
+  if (workspace) {
+    return (
+      <div className="flex h-svh w-full overflow-hidden bg-muted/30 text-foreground">
+        <NavRail />
+        <main className="h-full min-w-0 flex-1">{SCREENS[state.view]}</main>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-svh w-full overflow-hidden bg-muted/30 text-foreground">
@@ -86,7 +112,7 @@ function Shell() {
           conversationOpen ? "hidden md:block" : "block"
         )}
       >
-        {sidebar}
+        {SCREENS[state.view]}
       </aside>
 
       <main
@@ -101,6 +127,22 @@ function Shell() {
           <EmptyConversation />
         )}
       </main>
+
+      {/* Client panel — a docked column from xl up, so it sits beside the
+          conversation instead of covering it. Narrower viewports get the same
+          content as a sheet, opened from the conversation header; the two are
+          mutually exclusive so the panel is never in the DOM twice. */}
+      {wide &&
+      conversationOpen &&
+      state.preferences.crmPanel &&
+      selectedChat ? (
+        <aside
+          aria-label="Painel do cliente"
+          className="h-full w-[30%] max-w-[440px] min-w-[320px] shrink-0 border-l border-border"
+        >
+          <CrmPanel chat={selectedChat} />
+        </aside>
+      ) : null}
     </div>
   )
 }

@@ -14,15 +14,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
 
 import { Icon } from "./icon"
@@ -39,7 +39,11 @@ import {
   StarIcon,
 } from "./icons"
 
-/** Right-hand drawer with contact/group details, like WhatsApp's info panel. */
+/**
+ * Contact/group details. A centred modal rather than a right-hand drawer: the
+ * right edge now belongs to the docked client panel, and this one is a
+ * look-up you dismiss by clicking away.
+ */
 export function ContactPanel({
   chat,
   open,
@@ -62,9 +66,9 @@ export function ContactPanel({
   }, [chat])
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-sm">
-        <SheetHeader className="items-center gap-2 border-b border-border pb-5 text-center">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[85svh] w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+        <DialogHeader className="items-center gap-2 border-b border-border px-6 pt-6 pb-5 text-center">
           <Avatar className="size-20">
             <AvatarFallback
               className={cn("text-2xl font-medium", avatarTints[chat.tint])}
@@ -72,15 +76,15 @@ export function ContactPanel({
               {initials(chat.name)}
             </AvatarFallback>
           </Avatar>
-          <SheetTitle className="text-base">{chat.name}</SheetTitle>
-          <SheetDescription>
+          <DialogTitle className="text-base">{chat.name}</DialogTitle>
+          <DialogDescription>
             {chat.isGroup
               ? `Grupo · ${chat.members?.length ?? 0} participantes`
               : (chat.phone ?? "Contato")}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <div className="thin-scroll flex-1 overflow-y-auto">
+        <div className="thin-scroll min-h-0 flex-1 overflow-y-auto">
           {chat.about ? (
             <section className="px-5 py-4">
               <p className="text-[0.6875rem] font-medium text-muted-foreground">
@@ -112,7 +116,9 @@ export function ContactPanel({
               <ItemContent>
                 <ItemTitle>Documentos</ItemTitle>
               </ItemContent>
-              <span className="text-xs text-muted-foreground">{docs.length}</span>
+              <span className="text-xs text-muted-foreground">
+                {docs.length}
+              </span>
             </Item>
             <Item size="sm">
               <ItemMedia>
@@ -171,7 +177,10 @@ export function ContactPanel({
           {chat.isGroup && chat.members?.length ? (
             <Collapsible defaultOpen>
               <CollapsibleTrigger className="group flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-muted">
-                <Icon icon={MembersIcon} className="size-4 text-muted-foreground" />
+                <Icon
+                  icon={MembersIcon}
+                  className="size-4 text-muted-foreground"
+                />
                 <span className="flex-1 text-sm">
                   {chat.members.length} participantes
                 </span>
@@ -210,7 +219,10 @@ export function ContactPanel({
           <Separator />
 
           <section className="flex items-start gap-3 px-5 py-4">
-            <Icon icon={LockIcon} className="mt-0.5 size-4 text-muted-foreground" />
+            <Icon
+              icon={LockIcon}
+              className="mt-0.5 size-4 text-muted-foreground"
+            />
             <div>
               <p className="text-sm">Criptografia</p>
               <p className="text-xs text-muted-foreground">
@@ -264,7 +276,7 @@ export function ContactPanel({
             </Button>
           </section>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }

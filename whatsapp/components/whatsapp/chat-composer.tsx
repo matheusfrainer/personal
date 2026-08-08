@@ -55,8 +55,12 @@ export function ChatComposer({ chat }: { chat: Chat }) {
   const [seconds, setSeconds] = React.useState(0)
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
-  const replyTo = state.replyToId ? findMessage(chat, state.replyToId) : undefined
-  const editing = state.editingId ? findMessage(chat, state.editingId) : undefined
+  const replyTo = state.replyToId
+    ? findMessage(chat, state.replyToId)
+    : undefined
+  const editing = state.editingId
+    ? findMessage(chat, state.editingId)
+    : undefined
 
   // Load the message text when an edit starts (in-render derived state, so no
   // setState-in-effect).
@@ -66,6 +70,20 @@ export function ChatComposer({ chat }: { chat: Chat }) {
     if (editing && editing.type === "text") setValue(editing.text)
     if (!state.editingId) setValue("")
   }
+
+  // A reply picked in the AI panel lands here. The store hands over a fresh
+  // object per dispatch, so comparing by identity lets the same suggestion be
+  // applied twice in a row.
+  const suggestion = state.composerSuggestion
+  const [seenSuggestion, setSeenSuggestion] = React.useState(suggestion)
+  if (seenSuggestion !== suggestion) {
+    setSeenSuggestion(suggestion)
+    if (suggestion && suggestion.chatId === chat.id) setValue(suggestion.text)
+  }
+  React.useEffect(() => {
+    if (suggestion) inputRef.current?.focus()
+  }, [suggestion])
+
   const hasText = value.trim().length > 0
 
   // Focus the box when a reply starts, like the real app.
@@ -187,7 +205,8 @@ export function ChatComposer({ chat }: { chat: Chat }) {
         <div className="flex items-center gap-3 px-3 py-3">
           <span className="size-2.5 animate-pulse rounded-full bg-destructive" />
           <span className="font-mono text-sm">
-            {Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, "0")}
+            {Math.floor(seconds / 60)}:
+            {(seconds % 60).toString().padStart(2, "0")}
           </span>
           <span className="flex-1 text-xs text-muted-foreground">
             Gravando mensagem de voz…
@@ -200,7 +219,11 @@ export function ChatComposer({ chat }: { chat: Chat }) {
           >
             <Icon icon={DeleteIcon} />
           </Button>
-          <Button size="icon" aria-label="Enviar gravação" onClick={() => stopRecording(true)}>
+          <Button
+            size="icon"
+            aria-label="Enviar gravação"
+            onClick={() => stopRecording(true)}
+          >
             <Icon icon={SendIcon} />
           </Button>
         </div>

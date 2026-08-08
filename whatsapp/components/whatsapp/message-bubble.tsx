@@ -4,16 +4,8 @@ import { messagePreview } from "@/lib/data"
 import { useStore } from "@/lib/store"
 import type { Message as MessageType } from "@/lib/types"
 import { cn } from "@/lib/utils"
-import {
-  Bubble,
-  BubbleContent,
-  BubbleReactions,
-} from "@/components/ui/bubble"
-import {
-  Message,
-  MessageContent,
-  MessageHeader,
-} from "@/components/ui/message"
+import { Bubble, BubbleContent, BubbleReactions } from "@/components/ui/bubble"
+import { Message, MessageContent, MessageHeader } from "@/components/ui/message"
 
 import { AudioMessage } from "./audio-message"
 import { Icon } from "./icon"
@@ -124,9 +116,8 @@ export function MessageBubble({
       className={cn(
         "scroll-mt-20 px-2 transition-colors",
         showTail ? "mt-2 first:mt-0" : "mt-0.5",
-        // BubbleReactions overhangs the bubble's bottom edge, so reserve room
-        // or the next message collides with the pill.
-        message.reactions?.length && "mb-3.5",
+        // No bottom reservation for BubbleReactions: the pill is meant to
+        // overlap the message below it rather than push the transcript around.
         // Selection highlight spans the full row, like the real app.
         selected && "-mx-2 bg-foreground/5 px-4",
         selectionMode && "cursor-pointer"
@@ -143,7 +134,12 @@ export function MessageBubble({
         <Bubble
           variant={sticker ? "ghost" : fromMe ? "tinted" : "outline"}
           align={align}
-          className="group/bubble-row max-w-full"
+          className={cn(
+            "group/bubble-row",
+            // The transcript is full-bleed, so the column no longer caps line
+            // length — the bubble itself carries the reading limit now.
+            sticker ? "max-w-full" : "max-w-[min(75%,34rem)]"
+          )}
         >
           <BubbleContent
             className={cn(
@@ -152,8 +148,8 @@ export function MessageBubble({
               showTail &&
                 !sticker &&
                 (fromMe
-                  ? "rounded-tr-none bubble-tail-out"
-                  : "rounded-tl-none bubble-tail-in")
+                  ? "bubble-tail-out rounded-tr-none"
+                  : "bubble-tail-in rounded-tl-none")
             )}
           >
             {message.forwarded && !message.deleted ? (
@@ -184,7 +180,11 @@ export function MessageBubble({
               </button>
             ) : null}
 
-            <div className={cn(flush ? "" : "flex flex-wrap items-end justify-end gap-x-2")}>
+            <div
+              className={cn(
+                flush ? "" : "flex flex-wrap items-end justify-end gap-x-2"
+              )}
+            >
               <div className={cn("min-w-0", flush ? "" : "mr-auto")}>
                 <Body message={message} />
               </div>
@@ -201,7 +201,9 @@ export function MessageBubble({
                 {message.starred ? (
                   <Icon icon={StarIcon} className="size-3" />
                 ) : null}
-                {message.edited ? <span className="italic">editada</span> : null}
+                {message.edited ? (
+                  <span className="italic">editada</span>
+                ) : null}
                 {message.time}
                 {fromMe ? (
                   <StatusTicks
